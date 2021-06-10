@@ -6,4 +6,4 @@
 __version__ = '0.2.0.2'
 __author__ = 'Oliver Lindemann'
 APPNAME = "RExam Item Editor"
-WEBSITE = ""
+WEBSITE = "https://github.com/lindemann09/rexam-item-editor"
