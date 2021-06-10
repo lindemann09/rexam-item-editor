@@ -7,6 +7,3 @@ FILES = {"schoice": _path.join(_fldir, "TemplateMultipleChoice.Rmd"),
         "num": _path.join(_fldir, "TemplateBlankNumber.Rmd"),
         "string": _path.join(_fldir, "TemplateBlankTextEssay.Rmd"),
         "cloze": _path.join(_fldir, "TemplateBlankCombination.Rmd")}
-
-
-

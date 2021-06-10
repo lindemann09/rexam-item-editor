@@ -15,9 +15,8 @@ Solution
 
 Answerlist
 ----------
-* replace-with-feedback-A
-* replace-with-feedback-B
-* replace-with-feedback-C
+
+
 
 Meta-information
 ================
