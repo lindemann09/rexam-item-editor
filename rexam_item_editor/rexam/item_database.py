@@ -48,7 +48,7 @@ class _SearchSchemata(object):
 
 class ItemFileList(object):
 
-    def __init__(self, folder=None, files_first_level=False,
+    def __init__(self, folder=None, files_first_level=True,
                                     files_second_level=True):
         self.files = []
         self.base_directory = folder
@@ -166,10 +166,13 @@ class ItemFileList(object):
 
 class ItemDatabase(ItemFileList):
 
-    def __init__(self, folder):
+    def __init__(self, folder, files_first_level,
+                            files_second_level):
         """file_list_bilingual: path or file_list_biligual
         """
-        super().__init__(folder=folder)
+        super().__init__(folder=folder,
+                         files_first_level=files_first_level,
+                         files_second_level=files_second_level)
         self._selected_ids = []
 
         ## LOAD DATA

@@ -50,7 +50,7 @@ class RmdFile(FilePath):
             self.name = self.name + SEP + v
 
     def subdir_mirrors_filename(self):
-        return self.name == self.sub_dir
+        return self.name == self.sub_directory
 
     def get_other_language_rmdfile(self):
         if len(self.language_code):
@@ -62,8 +62,8 @@ class RmdFile(FilePath):
 
             rtn = deepcopy(self)
             rtn.name = name
-            if len(self.sub_dir):
-                rtn.sub_dir = name
+            if len(self.sub_directory):
+                rtn.sub_directory = name
             return rtn
         else:
             return None
@@ -72,7 +72,7 @@ class RmdFile(FilePath):
         """Returns io error, if it occurs other the new RmdFile object"""
         new = deepcopy(self)
         new.name = new_name
-        new.sub_dir = new_name
+        new.sub_directory = new_name
 
         #copy fiels
         ioerror = copytree(self.directory, new.directory)

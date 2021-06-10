@@ -23,7 +23,7 @@ class FilePath(object):
 
         if file_path is None or file_path == "":
             self.filename = ""
-            self.sub_dir = ""
+            self.sub_directory = ""
             if base_directory is None:
                 self.base_directory = ""
             else:
@@ -31,24 +31,32 @@ class FilePath(object):
 
         elif base_directory is None:
             directory, self.filename = path.split(path.abspath(file_path))
-            self.base_directory, self.sub_dir = path.split(directory)
+            self.base_directory, self.sub_directory = path.split(directory)
             if len(self.base_directory)==0:
-                self.sub_dir, self.base_directory = \
-                                    self.base_directory, self.sub_dir
+                self.sub_directory, self.base_directory = \
+                                    self.base_directory, self.sub_directory
 
         else:
-            # relative to base directory
+
             self.base_directory = path.abspath(base_directory)
             abs_file_path = path.abspath(file_path)
             if abs_file_path.startswith(self.base_directory):
-                # file_path is subpart of base directory
-                rel_file_path = abs_file_path.replace(
-                                        self.base_directory + path.sep, "")
+                # abs_file_path is subpart of base directory
+                rel_file_path = path.relpath(abs_file_path,
+                                             start= self.base_directory)
             else:
-                # file_path is subpart of base directory
+                # abs_file_path is not subpart of base directory,
+                # it's thus relative to base_directory
                 rel_file_path = file_path
 
-            self.sub_dir, self.filename = path.split(rel_file_path)
+                if file_path == abs_file_path:
+                    # it's abs_solute path (but not part of base_directory)
+                    # base_direct does not make sense
+                    self.base_directory = ""
+
+
+
+            self.sub_directory, self.filename = path.split(rel_file_path)
 
     def __eq__(self, other):
         try:
@@ -72,16 +80,16 @@ class FilePath(object):
 
     @property
     def full_path(self):
-        return path.join(self.base_directory, self.sub_dir, self.filename)
+        return path.join(self.base_directory, self.sub_directory, self.filename)
 
     @property
     def directory(self):
-        return path.join(self.base_directory, self.sub_dir)
+        return path.join(self.base_directory, self.sub_directory)
 
     @property
     def relative_path(self):
         """path relative to base director"""
-        return path.join(self.sub_dir, self.filename)
+        return path.join(self.sub_directory, self.filename)
 
     def make_dirs(self):
         try:
@@ -94,7 +102,7 @@ class FilePath(object):
         new = deepcopy(self)
         new.name = new_name
         if rename_dir:
-            new.sub_dir = new_name
+            new.sub_directory = new_name
 
         if rename_on_disk:
             io_error = os_rename(self.full_path, new.full_path)
@@ -106,4 +114,4 @@ class FilePath(object):
                     return "Can't rename directory: {}".format(io_error)
 
         self.filename = new.filename
-        self.sub_dir = new.sub_dir
+        self.sub_directory = new.sub_directory
