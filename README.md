@@ -33,12 +33,16 @@ Optional requirement:
 
 ## Rendering Rmd File (work in progress)
 
-To render Rmd files directly via the *StatsShare-Item-Editor*, you need 
-a functioning 
-installation of *R* including the *R*-package `exams`. 
+To render Rmd files directly via the *RExam-Item-Editor*, you need 
+a functioning installation of *R* including the *R*-package `exams`. 
 
 If you don't use the Windows executable, install the Python-package `rpy2` (`pip install rpy2`). 
 
-Windows user find two executable files for *StatsShare-Item-Editor*, one with
-and one without *R* rendering support. *StatsShare-Item-Editor* with 
+Windows user find two executable files for *RExam-Item-Editor*, one with
+and one without *R* rendering support. *RExam-Item-Editor* with 
 rendering does not work on computers  without a *R* installation.
+
+---
+
+Note: The [Item Editor](https://github.com/essb-mt-section/sharestats-item-editor)
+for the *ShareStats* project is based on *RExam-item-Editor*.

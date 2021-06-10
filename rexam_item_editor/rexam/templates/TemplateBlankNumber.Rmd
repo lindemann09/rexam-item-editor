@@ -5,8 +5,7 @@ replace-with-question-text
 
 Solution
 ========
-  
-replace-with-general-feedback
+
 
 Meta-information
 ================
@@ -14,8 +13,3 @@ exname: replace-with-itemname
 extype: num
 exsolution: 
 extol: 
-exsection: 
-exextra[Type]: 
-exextra[Program]: 
-exextra[Language]: 
-exextra[Level]: 

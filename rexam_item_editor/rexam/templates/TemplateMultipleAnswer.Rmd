@@ -11,8 +11,7 @@ Answerlist
 
 Solution
 ========
-  
-replace-with-general-feedback
+
 
 Answerlist
 ----------
@@ -25,8 +24,3 @@ Meta-information
 exname: replace-with-itemname
 extype: mchoice
 exsolution: 
-exsection: 
-exextra[Type]: 
-exextra[Program]: 
-exextra[Language]: 
-exextra[Level]: 

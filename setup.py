@@ -53,7 +53,7 @@ if __name__ == '__main__':
     setup(
         name = application_name,
         version=version,
-        description='Maintaining and editing databases of Rexam items',
+        description='Maintaining and editing databases of RExam items',
         author='Oliver Lindemann',
         author_email='lindemann@cognitive-psychology.eu',
         license='MIT licence',

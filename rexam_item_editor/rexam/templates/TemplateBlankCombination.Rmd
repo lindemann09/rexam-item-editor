@@ -11,8 +11,6 @@ Answerlist
 
 Solution
 ========
-  
-replace-with-general-feedback
 
 Answerlist
 ----------
@@ -26,8 +24,3 @@ extype: cloze
 exclozetype: num|string
 exsolution: 5|"correct text"
 extol: 0.01
-exsection: 
-exextra[Type]: 
-exextra[Program]: 
-exextra[Language]: 
-exextra[Level]: 
