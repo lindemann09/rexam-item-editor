@@ -439,12 +439,12 @@ class MainWin(object):
 
     def add_second_language(self):
             ifln = self.fl_list.files[self.idx_selected_item].rmd_item
-            fl_path = ifln.get_other_language_path()
+            fl_path = ifln.get_other_language_rmdfile()
             copy_content = sg.popup_yes_no("Copy content of {}?".format(
                         ifln.name))
             if copy_content == "Yes":
                 new_name = RmdFile(fl_path).name
-                new = ifln.copy_files(new_name)
+                new = ifln.copy_subdir_files(new_name)
                 if not isinstance(new, RmdFile):
                     # io error
                     log(new)

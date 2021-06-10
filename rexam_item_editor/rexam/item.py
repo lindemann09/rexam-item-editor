@@ -400,7 +400,7 @@ class RExamItem(RmdFile):
 
     def fix_directory_name(self):
         self.save()
-        rename(self.directory, self.get_mirroring_dir_name())
+        rename(self.directory, path.join(self.base_directory, self.name))
 
     def fix_uppercases_in_relative_path(self):
         self.save()
