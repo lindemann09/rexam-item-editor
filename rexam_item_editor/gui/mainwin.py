@@ -20,7 +20,7 @@ LANG2_EVENT_PREFIX = "Lang2"
 class MainWin(object):
 
     def __init__(self, reset_settings=False, change_meta_info_button=False,
-                 two_languages=None): # FIXME languiages to settings and GUI
+                 two_languages=("Dutch", "English")):
 
         """languages is none or a list of two strings indicating the
         respective languages languages"""
@@ -28,17 +28,18 @@ class MainWin(object):
         self.settings = JSONSettings(
                          appname=APPNAME.replace(" ", "_").lower(),
                          settings_file_name="settings.json",
-                         defaults= {"recent_dirs": []},
+                         defaults= {"recent_dirs": [], "bilingual": True},
                          reset=reset_settings)
 
         if isinstance(two_languages, (tuple, list)) and len(two_languages) == 2:
-            self.is_bilingual = True
+            if not self.settings.bilingual:
+                two_languages = (two_languages[0], "")
         elif two_languages is None:
-            self.is_bilingual = False
             two_languages = ("File", "")
         else:
             raise RuntimeError("The parameter languages ha to be a tuple of "
-                               "two string or None.")
+                               "two strings or None.")
+        self.is_bilingual = len(two_languages[1])>0
 
         # remove not existing recent dirs
         existing_dirs =  list(filter(path.isdir, self.settings.recent_dirs))
@@ -108,8 +109,16 @@ class MainWin(object):
         file = ['&New Item', '&Save Item', '---',
                 'Open &Directory',
                 'Recent', list(reversed(self.settings.recent_dirs[:-1])),
-                '---', '&Reload Item List',
+                '---']
+
+        if self.is_bilingual:
+            file += ["Single &Language Mode"]
+        else:
+            file += ["Bi&lingual Mode"]
+
+        file += ['---', '&Reload Item List',
                 '---', 'C&lose']
+
         view = ["&Raw files", "---", '&About']
         menu = [['&File', file], ["&View", view]]
 
@@ -389,6 +398,13 @@ class MainWin(object):
                 return
             self.save_items(ask=True)
             dialogs.show_text_file(flns.rmd_item, flns.rmd_translation)
+
+        elif event == "Single Language Mode" or event == "Bilingual Mode":
+            sg.PopupOK("Restart App", "Please restart '{}' to switch to the new presentation mode.".format(APPNAME), keep_on_top=True)
+            self.settings.bilingual = event == "Bilingual Mode"
+            self.settings.save()
+            self.save_items(ask=True)
+            exit()
 
         elif event.endswith("render"):
             try:
