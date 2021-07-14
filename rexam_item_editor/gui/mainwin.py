@@ -249,7 +249,7 @@ class MainWin(object):
             except:
                 selected_file = None
 
-                self.update_item_list()
+            self.update_item_list()
         self.ig_l1.rexam_item = None
         self.ig_l2.rexam_item = None
         self.ig_l2.update_gui()
@@ -338,7 +338,7 @@ class MainWin(object):
             ig.update_gui()
 
 
-    def process_event(self, event, values):
+    def process_event(self, event, _values):
 
         if event == "__TIMEOUT__":
             if self.fl_list.is_file_list_changed():
@@ -465,7 +465,9 @@ class MainWin(object):
         if new_rmd_file_name is None:
             new_items = dialogs.new_item(self.base_directory)
         else:
-            assert (isinstance(new_rmd_file_name, str))
+            if isinstance(new_rmd_file_name, RmdFile):
+                new_rmd_file_name = new_rmd_file_name.full_path
+
             new_items = [RExamItem(RmdFile(new_rmd_file_name,
                                 base_directory=self.base_directory)), None]
             if self.ig_l2.rexam_item is not None:
@@ -499,8 +501,7 @@ class MainWin(object):
             copy_content = sg.popup_yes_no("Copy content of {}?".format(
                         ifln.name))
             if copy_content == "Yes":
-                new_name = RmdFile(fl_path).name
-                new = ifln.copy_subdir_files(new_name)
+                new = ifln.copy_subdir_files(fl_path.name)
                 if not isinstance(new, RmdFile):
                     # io error
                     log(new)
@@ -508,6 +509,7 @@ class MainWin(object):
                     return
                 self.reset_gui()
             else:
+
                 self.new_item(fl_path)
 
     def rename(self):
