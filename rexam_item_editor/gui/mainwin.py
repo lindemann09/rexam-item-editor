@@ -3,12 +3,12 @@ import PySimpleGUI as sg
 
 from .. import __version__, APPNAME
 from ..rexam.rmd_file import RmdFile, CODE_L1, CODE_L2
-from ..rexam.item_database import ItemFileList
+from ..rexam.item_database import BiLingRmdFileList
 from ..rexam.r_render import RPY2INSTALLED
 from ..rexam.item import RExamItem, AnswerList
 from . import dialogs, consts
 from .json_settings import JSONSettings
-from .item_gui import ItemGUI
+from .gui_item import GUIItem
 from .log import log
 
 sg.theme_add_new("mytheme", consts.SG_COLOR_THEME)
@@ -48,8 +48,8 @@ class MainWin(object):
             self.settings.save()
 
         # LAYOUT
-        self.ig_l1 = ItemGUI(two_languages[0], LANG1_EVENT_PREFIX, change_meta_info_button)
-        self.ig_l2 = ItemGUI(two_languages[1], LANG2_EVENT_PREFIX, change_meta_info_button,
+        self.ig_l1 = GUIItem(two_languages[0], LANG1_EVENT_PREFIX, change_meta_info_button)
+        self.ig_l2 = GUIItem(two_languages[1], LANG2_EVENT_PREFIX, change_meta_info_button,
                              disabled=not self.is_bilingual)
 
         self.lb_items = sg.Listbox(values=[], enable_events=True,
@@ -91,18 +91,19 @@ class MainWin(object):
                             tearoff=False)
 
         if self.is_bilingual:
-            right_frames = [self.ig_l1.main_frame, self.ig_l2.main_frame]
+            right_frames = [self.ig_l1.gui_element, self.ig_l2.gui_element]
         else:
-            right_frames = [self.ig_l1.main_frame]
+            right_frames = [self.ig_l1.gui_element]
 
         self.layout = [
                   [self.menu],
                   [fr_base_dir, fr_item_name],
                   [left_frame]+ right_frames]
 
-        self.fl_list = ItemFileList(files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
-                                    files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
-                                    check_for_bilingual_files=self.is_bilingual)
+        self.fl_list = BiLingRmdFileList(files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
+                                         files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
+                                         check_for_bilingual_files=self.is_bilingual)
+
         self._unsaved_item = None
 
     def menu_definition(self):
@@ -219,10 +220,10 @@ class MainWin(object):
                 sg.PopupError("No valid item directory selected.")
                 exit()
 
-        self.fl_list = ItemFileList(folder=self.base_directory,
-                        files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
-                        files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
-                        check_for_bilingual_files=self.is_bilingual)
+        self.fl_list = BiLingRmdFileList(base_directory=self.base_directory,
+                                         files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
+                                         files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
+                                         check_for_bilingual_files=self.is_bilingual)
 
         cnt = self.fl_list.get_count()
         self.fr_items.update(value="{} items".format(cnt["total"]))

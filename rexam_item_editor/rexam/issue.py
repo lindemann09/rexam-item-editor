@@ -1,21 +1,20 @@
-import types
+from dataclasses import dataclass, field
+from typing import Any, Callable
 
+@dataclass
 class Issue(object):
     # issues from the validations
 
-    def __init__(self, label, description, fix_function=None,
-                 fix_requires_gui_reset=False):
-        self.label = label
-        self.description = description
-        self.fix_requires_gui_reset = fix_requires_gui_reset
-        if isinstance(fix_function, (types.FunctionType, types.MethodType)):
-            self.fix_fnc = fix_function
-        else:
-            self.fix_fnc = None
+    label: str
+    description: str
+    fix_fnc: Any = field(default=None)
+    fix_requires_gui_reset: bool = field(default=False)
 
+    def has_fix_function(self):
+        return isinstance(self.fix_fnc, Callable)
 
     def fix(self):
-        if self.fix_fnc is not None:
+        if self.has_fix_function():
             return self.fix_fnc()
         else:
             return False

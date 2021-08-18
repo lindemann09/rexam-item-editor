@@ -23,7 +23,7 @@ Oliver Lindemann, Erasmus University Rotterdam, NL
  
 ## Dependencies
 
-Python 3.5+ and the following libraries:
+Python 3.7+ and the following libraries:
 * PySimpleGUI
 * appdirs
 
