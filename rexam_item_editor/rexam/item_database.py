@@ -84,7 +84,7 @@ class EntryItemDatabase:
     def short_repr(self, max_lines, translation, add_versions=False, short_version=True):
         if translation:
             try:
-                txt = "k-" + self.translation.question.str_text_short(max_lines)
+                txt = self.translation.question.str_text_short(max_lines)
             except:
                 txt = ""
         else:
