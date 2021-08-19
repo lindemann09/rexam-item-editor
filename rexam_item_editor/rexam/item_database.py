@@ -1,5 +1,3 @@
-from dataclasses import dataclass, field
-from typing import Optional
 from multiprocessing import Pool
 
 from .rmd_file_list import BiLingRmdFileList, BiLingualRmdFilePair
@@ -45,12 +43,15 @@ class _SearchSchemata(object):
         self.parameter.append(parameter)
         self.search_types.append(search_type)
 
-@dataclass
-class EntryItemDatabase:
-    shared_name : str
-    item : RExamItem
-    translation: RExamItem
-    id: Optional[int] = field(default=None)
+class EntryItemDatabase(object):
+
+    def __init__(self, shared_name, item, translation):
+        assert isinstance(item, RExamItem) or item is None
+        assert isinstance(translation, RExamItem) or translation is None
+        self.shared_name = shared_name
+        self.item = item
+        self.translation = translation
+        self.id = None
 
     def is_same_as(self, item):
         """compares shared names and version id
@@ -230,7 +231,7 @@ class ItemDatabase(BiLingRmdFileList):
     def find_entry(self, entry_item_database):
         """returns all id of identical entries """
 
-        same = filter(lambda x:x == entry_item_database, self.entries)
+        same = filter(lambda x:x.is_same_as(entry_item_database), self.entries)
         rtn = map(lambda x: x.id, same)
         return list(rtn)
 

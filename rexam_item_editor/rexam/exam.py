@@ -1,6 +1,5 @@
 import json
 import time
-from dataclasses import dataclass
 
 from .item_database import ItemDatabase, BiLingRmdFileList, EntryItemDatabase
 from .item import RmdFile, RExamItem
@@ -15,14 +14,24 @@ def _get_relpath_and_hash(item):
     except:
         return None, None
 
-@dataclass(frozen=True)
 class ExamQuestion:
 
-    shared_name: str
-    path_item: str
-    path_translation: str
-    hash_item: str
-    hash_translation: str
+    def __init__(self, shared_name, path_item, path_translation,
+                 hash_item, hash_translation):
+
+        self.shared_name = shared_name
+        self.path_item = path_item
+        self.path_translation = path_translation
+        self.hash_item = hash_item
+        self.hash_translation = hash_translation
+
+    def is_same_as(self, other):
+        return isinstance(other, ExamQuestion) and \
+               self.shared_name == other.shared_name and \
+               self.path_item == other.path_item and \
+               self.path_translation == other.path_translation and \
+               self.hash_item == other.hash_item and \
+               self.hash_translation == other.hash_translation
 
     @staticmethod
     def from_database_item(db_item):
@@ -177,7 +186,7 @@ class Exam(object):
         else:
             needle = ExamQuestion.from_database_item(item)
             for x, quest in enumerate(self.questions):
-                if quest == needle:
+                if quest.is_same_as(needle):
                     return x
             return None
 
