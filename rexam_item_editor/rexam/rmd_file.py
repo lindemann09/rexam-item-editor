@@ -11,6 +11,7 @@ TAG_L1 = SEP + CODE_L1
 TAG_L2 = SEP + CODE_L2
 TAG_BILINGUAL = "{}[{}/{}]".format(SEP, CODE_L1, CODE_L2)
 
+
 def _copytree(source_folder, destination_folder):
     """copies a folder and return error if it occurs"""
     try:

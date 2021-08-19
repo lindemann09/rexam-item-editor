@@ -43,7 +43,9 @@ class _SearchSchemata(object):
         self.parameter.append(parameter)
         self.search_types.append(search_type)
 
+
 class EntryItemDatabase(object):
+    # biligual RExamItem
 
     def __init__(self, shared_name, item, translation):
         assert isinstance(item, RExamItem) or item is None
@@ -59,38 +61,44 @@ class EntryItemDatabase(object):
 
         if isinstance(item, EntryItemDatabase):
             return self.shared_name == item.shared_name and\
-                self.version_item() == item.version_item() and \
-                self.version_translation() == item.version_translation()
+                self.hash_item() == item.hash_item() and \
+                self.hash_translation() == item.hash_translation()
         else:
             return False
 
-    def version_item(self):
+    def hash_item(self):
         try:
-            return self.item.version_id()
+            return self.item.hash()
         except:
             return ""
 
-    def version_translation(self):
+    def hash_translation(self):
         try:
-            return self.translation.version_id()
+            return self.translation.hash()
         except:
             return ""
 
-    def version_item_short(self):
-        return self.version_item()[:7]
+    def hash_item_short(self):
+        try:
+            return self.item.hash_short()
+        except:
+            return ""
 
-    def version_translation_short(self):
-        return self.version_translation()[:7]
+    def hash_translation_short(self):
+        try:
+            return self.translation.hash_short()
+        except:
+            return ""
 
     def short_repr(self, max_lines, translation, add_versions=False, short_version=True):
         if translation:
             try:
-                txt = self.translation.question.str_text_short(max_lines)
+                txt = self.translation.question.str_text_short(max_lines, ignore_empty_lines=True)
             except:
                 txt = ""
         else:
             try:
-                txt = self.item.question.str_text_short(max_lines)
+                txt = self.item.question.str_text_short(max_lines, ignore_empty_lines=True)
             except:
                 txt = ""
 
@@ -98,14 +106,14 @@ class EntryItemDatabase(object):
         if add_versions:
             if short_version:
                 if translation:
-                    rtn.append(self.version_translation_short())
+                    rtn.append(self.hash_translation_short())
                 else:
-                    rtn.append(self.version_item_short())
+                    rtn.append(self.hash_item_short())
             else:
                 if translation:
-                    rtn.append( self.version_translation())
+                    rtn.append( self.hash_translation())
                 else:
-                    rtn.append(self.version_item())
+                    rtn.append(self.hash_item())
         return rtn
 
     @staticmethod
@@ -236,8 +244,8 @@ class ItemDatabase(BiLingRmdFileList):
         return list(rtn)
 
 
-    def find(self, item_version_id,
-             translation_version_id=None,
+    def find(self, item_hash,
+             translation_hash=None,
              item_relative_path = None,
              translation_relative_path=None,
              shared_name = None,
@@ -258,9 +266,9 @@ class ItemDatabase(BiLingRmdFileList):
                  e.translation.relative_path ==translation_relative_path)
 
             if  a and b and c:
-                if  e.version_item() == item_version_id and \
-                    (translation_version_id is None or
-                         e.version_translation() == translation_version_id):
+                if  e.hash_item() == item_hash and \
+                    (translation_hash is None or
+                         e.hash_translation() == translation_hash):
                     if find_all:
                         rtn.append(cnt)
                     else:

@@ -7,6 +7,7 @@ from ..rexam import r_render, extypes
 from ..rexam.rmd_file import RmdFile, SEP, TAG_L1, TAG_L2, TAG_BILINGUAL
 from ..rexam.item import RExamItem
 
+
 def top_label(elem, label="", border_width=0):
     if not isinstance(elem, list):
         elem = [elem]

@@ -80,19 +80,19 @@ class ItemSection(object):
 
     def str_text(self, ignore_empty_lines=False, wrap_text_width=0):
         if ignore_empty_lines:
-            rtn = ""
-            for x in self.text_array:
-                x = x.strip()
-                if len(x):
-                    rtn += x + "\n"
-            rtn = rtn.strip()
+            tmp = [x for x in self.text_array if len(x.strip())]
         else:
-            rtn = "".join(self.text_array).rstrip()
+            tmp = self.text_array
 
         if wrap_text_width>1:
-            return textwrap.fill(rtn, wrap_text_width)
+            rtn = ""
+            for x in tmp:
+                rtn += textwrap.fill(x, width=wrap_text_width,
+                                 replace_whitespace=False) + "\n"
         else:
-            return rtn
+             rtn = "".join(tmp).rstrip()
+
+        return rtn.rstrip()
 
     def str_text_short(self, max_lines=2, ignore_empty_lines=True):
         """return x lines for the section and ignores empty lines"""
@@ -100,9 +100,8 @@ class ItemSection(object):
             cnt = 0
             rtn = ""
             for x in self.text_array:
-                x = x.strip()
-                if len(x):
-                    rtn += x + "\n"
+                if len(x.strip()):
+                    rtn += x
                     cnt += 1
                     if cnt >= max_lines:
                         break
@@ -380,19 +379,23 @@ class RExamItem(RmdFile):
 
         self.header = []
         self.text_array = []
-        self._version_id = None
+        self._hash = None
 
         if path.isfile(self.full_path):
             self.import_file(self.full_path)
 
-    def version_id(self):
+    def hash(self):
         """question id is based on the filename and file folder"""
 
-        if self._version_id is None:
+        if self._hash is None:
             txt = str(self.question) + str(self.solution) + str(self.meta_info)
-            self._version_id = hashlib.md5(txt.encode()).hexdigest() # calc only once
+            self._hash = hashlib.md5(txt.encode()).hexdigest() # calc only once
 
-        return self._version_id
+        return self._hash
+
+    def hash_short(self):
+        return self.hash()[:7]
+
 
     def import_file(self, text_file):
         """import a text file as content"""
@@ -483,8 +486,9 @@ class RExamItem(RmdFile):
 
     def markdown(self, enumerator=None, wrap_text_width=0):
         '''optional counter to enumerate questions'''
-        question_str = self.question.str_text(ignore_empty_lines=True,
+        question_str = self.question.str_text(ignore_empty_lines=False,
                                               wrap_text_width=wrap_text_width)
+
         if self.question.answer_list is not None:
             question_str += "\n\n" + \
                             self.question.answer_list.str_answers(

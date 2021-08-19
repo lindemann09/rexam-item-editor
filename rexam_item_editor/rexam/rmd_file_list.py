@@ -79,8 +79,6 @@ class BiLingualRmdFilePair(object):
 
 class BiLingRmdFileList(object):
 
-    Entry = BiLingualRmdFilePair
-
     def __init__(self, base_directory=None, files_first_level=True,
                                     files_second_level=True,
                                     check_for_bilingual_files=True):
@@ -88,6 +86,7 @@ class BiLingRmdFileList(object):
         self.base_directory = base_directory
         self.files_first_level = files_first_level
         self.files_second_level = files_second_level
+        self.check_for_bilingual_files = check_for_bilingual_files
 
         # check for matching languages
         lst = misc.CaseInsensitiveStringList(self.get_rmd_files())
@@ -116,7 +115,7 @@ class BiLingRmdFileList(object):
             else:
                 second = None
 
-            self.files.append(BiLingRmdFileList.Entry(rmd_file_item=first,
+            self.files.append(BiLingualRmdFilePair(rmd_file_item=first,
                                                       rmd_file_translation=second,
                                                       reference_language_code=reference_language))
 

@@ -6,6 +6,7 @@ from ..rexam.rmd_file import RmdFile, CODE_L1, CODE_L2
 from ..rexam.item_database import BiLingRmdFileList
 from ..rexam.r_render import RPY2INSTALLED
 from ..rexam.item import RExamItem, AnswerList
+from ..rexam.item_database import EntryItemDatabase
 from . import dialogs, consts
 from .json_settings import JSONSettings
 from .gui_item import GUIItem
@@ -16,6 +17,7 @@ sg.theme("mytheme")
 
 LANG1_EVENT_PREFIX = "Lang1"
 LANG2_EVENT_PREFIX = "Lang2"
+
 
 class MainWin(object):
 
@@ -48,8 +50,12 @@ class MainWin(object):
             self.settings.save()
 
         # LAYOUT
-        self.ig_l1 = GUIItem(two_languages[0], LANG1_EVENT_PREFIX, change_meta_info_button)
-        self.ig_l2 = GUIItem(two_languages[1], LANG2_EVENT_PREFIX, change_meta_info_button,
+        self.ig_l1 = GUIItem(two_languages[0], LANG1_EVENT_PREFIX,
+                             show_hash=False,
+                             change_meta_info_button=change_meta_info_button)
+        self.ig_l2 = GUIItem(two_languages[1], LANG2_EVENT_PREFIX,
+                             show_hash=self.ig_l1.show_hash,
+                             change_meta_info_button=change_meta_info_button,
                              disabled=not self.is_bilingual)
 
         self.lb_items = sg.Listbox(values=[], enable_events=True,
@@ -120,7 +126,10 @@ class MainWin(object):
         file += ['---', '&Reload Item List',
                 '---', 'C&lose']
 
-        view = ["&Raw files", "---", '&About']
+        view = ["&Raw files", "---", "Show &hashes", "---", '&About']
+        if self.ig_l1.show_hash:
+            view[2] = "Hide &hashes"
+
         menu = [['&File', file], ["&View", view]]
 
         if  RPY2INSTALLED:
@@ -399,6 +408,12 @@ class MainWin(object):
                 return
             self.save_items(ask=True)
             dialogs.show_text_file(flns.rmd_item, flns.rmd_translation)
+
+        elif event == "Show hashes" or event == "Hide hashes": # toggle hashes
+            self.ig_l1.show_hash = not self.ig_l1.show_hash
+            self.ig_l2.show_hash = self.ig_l1.show_hash
+            self.reset_gui()
+
 
         elif event == "Single Language Mode" or event == "Bilingual Mode":
             sg.PopupOK("Restart App", "Please restart '{}' to switch to the new presentation mode.".format(APPNAME), keep_on_top=True)
