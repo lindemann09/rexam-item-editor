@@ -2,11 +2,9 @@ from os import path
 from copy import deepcopy
 import shutil
 from .filepath import FilePath, os_rename
+from ..consts import CODE_L1, CODE_L2
 
 SEP = "-"
-CODE_L1 = "nl"
-CODE_L2 = "en"
-
 TAG_L1 = SEP + CODE_L1
 TAG_L2 = SEP + CODE_L2
 TAG_BILINGUAL = "{}[{}/{}]".format(SEP, CODE_L1, CODE_L2)
@@ -74,7 +72,7 @@ class RmdFile(FilePath):
         new.name = new_name
         new.sub_directory = new_name
 
-        #copy fiels
+        # copy files
         ioerror = _copytree(self.directory, new.directory)
         if ioerror:
             return ioerror

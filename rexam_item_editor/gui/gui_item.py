@@ -1,10 +1,9 @@
 from os import listdir, path
 import PySimpleGUI as sg
 
-from .. import misc
+from .. import misc, consts
 from ..rexam import extypes
 from ..rexam.item import RExamItem, AnswerList
-from . import consts
 
 _EMPTY_ITEM = RExamItem(None)
 

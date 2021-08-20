@@ -1,4 +1,3 @@
-import textwrap
 from os import path, rename
 from collections import OrderedDict
 import hashlib
@@ -7,12 +6,12 @@ import textwrap
 
 from . import extypes
 from .. import templates
+from ..consts import FILE_ENCODING
 from .rmd_file import RmdFile
 from .filepath import FilePath
 from .issue import Issue
 from ..misc import extract_parameter
 
-FILE_ENCODING = 'utf-8'
 
 class ItemSection(object):
 
@@ -230,7 +229,7 @@ class ItemMetaInfo(ItemSection):
             for k, filename in templates.FILES.items():
                 meta_info = False
                 rtn[k] = OrderedDict()
-                with open(filename, "r", encoding='utf-8') as fl:
+                with open(filename, "r", encoding=FILE_ENCODING) as fl:
                     for l in fl:
                         if l.startswith("Meta-information"):
                             meta_info = True

@@ -1,13 +1,12 @@
 from os import path, getcwd
 import PySimpleGUI as sg
 
-from .. import __version__, APPNAME
-from ..rexam.rmd_file import RmdFile, CODE_L1, CODE_L2
+from .. import __version__, APPNAME, consts
+from ..rexam.rmd_file import RmdFile
 from ..rexam.item_database import BiLingRmdFileList
 from ..rexam.r_render import RPY2INSTALLED
 from ..rexam.item import RExamItem, AnswerList
-from ..rexam.item_database import EntryItemDatabase
-from . import dialogs, consts
+from . import dialogs
 from .json_settings import JSONSettings
 from .gui_item import GUIItem
 from .log import log
@@ -22,7 +21,7 @@ LANG2_EVENT_PREFIX = "Lang2"
 class MainWin(object):
 
     def __init__(self, reset_settings=False, change_meta_info_button=False,
-                 two_languages=("Dutch", "English")):
+                        monolingual=False):
 
         """languages is none or a list of two strings indicating the
         respective languages languages"""
@@ -33,15 +32,7 @@ class MainWin(object):
                          defaults= {"recent_dirs": [], "bilingual": True},
                          reset=reset_settings)
 
-        if isinstance(two_languages, (tuple, list)) and len(two_languages) == 2:
-            if not self.settings.bilingual:
-                two_languages = (two_languages[0], "")
-        elif two_languages is None:
-            two_languages = ("File", "")
-        else:
-            raise RuntimeError("The parameter languages ha to be a tuple of "
-                               "two strings or None.")
-        self.is_bilingual = len(two_languages[1])>0
+        self.is_bilingual = not monolingual and self.settings.bilingual
 
         # remove not existing recent dirs
         existing_dirs =  list(filter(path.isdir, self.settings.recent_dirs))
@@ -50,6 +41,10 @@ class MainWin(object):
             self.settings.save()
 
         # LAYOUT
+        if self.is_bilingual:
+            two_languages = (consts.LANGUAGE1, consts.LANGUAGE2)
+        else:
+            two_languages = ("File", "")
         self.ig_l1 = GUIItem(two_languages[0], LANG1_EVENT_PREFIX,
                              show_hash=False,
                              change_meta_info_button=change_meta_info_button)
@@ -238,9 +233,9 @@ class MainWin(object):
         self.fr_items.update(value="{} items".format(cnt["total"]))
 
         cnt_txt = "{} {}, {} {}, {} {}/{}".format(
-             cnt[CODE_L1], CODE_L1,
-             cnt[CODE_L2], CODE_L2,
-             cnt["bilingual"], CODE_L1, CODE_L2)
+             cnt[consts.CODE_L1], consts.CODE_L1,
+             cnt[consts.CODE_L2], consts.CODE_L2,
+             cnt["bilingual"], consts.CODE_L1, consts.CODE_L2)
         if cnt["undef"] > 0:
             cnt_txt += ", {} undef".format(cnt["undef"])
         self.txt_item_cnt.update(value=cnt_txt)
@@ -255,7 +250,7 @@ class MainWin(object):
         else:
             try:
                 selected_file = self.fl_list.files[
-                                    self.idx_selected_item].rmd_item.filename
+                                    self.idx_selected_item].rmdfile_l1.filename
             except:
                 selected_file = None
 
@@ -407,7 +402,7 @@ class MainWin(object):
             except:
                 return
             self.save_items(ask=True)
-            dialogs.show_text_file(flns.rmd_item, flns.rmd_translation)
+            dialogs.show_text_file(flns.rmdfile_l1, flns.rmdfile_l2)
 
         elif event == "Show hashes" or event == "Hide hashes": # toggle hashes
             self.ig_l1.show_hash = not self.ig_l1.show_hash
@@ -428,9 +423,9 @@ class MainWin(object):
             except:
                 return
             if event.startswith("Dutch"):
-                fl = flns.rmd_item
+                fl = flns.rmdfile_l1
             else:
-                fl = flns.rmd_translation
+                fl = flns.rmdfile_l2
             if fl is not None:
                 self.save_items(ask=True)
                 dialogs.render(fl)
@@ -445,18 +440,18 @@ class MainWin(object):
             fls = None
 
         if fls is not None:
-            if self.is_bilingual and  fls.rmd_item.language_code == CODE_L2 \
+            if self.is_bilingual and fls.rmdfile_l1.language_code == consts.CODE_L2 \
                     and not fls.is_bilingual():
-                self.ig_l2.rexam_item = RExamItem.load(fls.rmd_item.full_path,
+                self.ig_l2.rexam_item = RExamItem.load(fls.rmdfile_l1.full_path,
                                                        base_directory = self.base_directory)
                 self.ig_l1.rexam_item = None
             else:
-                self.ig_l1.rexam_item = RExamItem.load(fls.rmd_item.full_path,
+                self.ig_l1.rexam_item = RExamItem.load(fls.rmdfile_l1.full_path,
                                                        base_directory = self.base_directory)
 
-                if fls.rmd_translation is not None:
+                if fls.rmdfile_l2 is not None:
                     self.ig_l2.rexam_item = RExamItem.load(
-                                    fls.rmd_translation.full_path,
+                                    fls.rmdfile_l2.full_path,
                                     base_directory=self.base_directory)
                 else:
                     self.ig_l2.rexam_item = None
@@ -500,7 +495,7 @@ class MainWin(object):
 
             self.ig_l1.rexam_item = new_items[0]
             self.ig_l2.rexam_item = new_items[1] # FIXME no biligual new items
-            if self.ig_l1.rexam_item.language_code == CODE_L2:
+            if self.ig_l1.rexam_item.language_code == consts.CODE_L2:
                 self.ig_l1.rexam_item, self.ig_l2.rexam_item = \
                     self.ig_l2.rexam_item, self.ig_l1.rexam_item # swap
             self.update_item_list()
@@ -512,7 +507,7 @@ class MainWin(object):
             self.menu.update(menu_definition=self.menu_definition())
 
     def add_second_language(self):
-            ifln = self.fl_list.files[self.idx_selected_item].rmd_item
+            ifln = self.fl_list.files[self.idx_selected_item].rmdfile_l1
             fl_path = ifln.get_other_language_rmdfile()
             copy_content = sg.popup_yes_no("Copy content of {}?".format(
                         ifln.name))
@@ -537,8 +532,8 @@ class MainWin(object):
             add_language = len(n2) and not flns.is_bilingual()
             # rename
             for new_name, old in zip((n1, n2),
-                                     (flns.rmd_item,
-                                      flns.rmd_translation)):
+                                     (flns.rmdfile_l1,
+                                      flns.rmdfile_l2)):
                 if new_name is not None and old is not None:
                     log(old.rename(new_name,
                                    new_sub_dir=new_name,
