@@ -40,18 +40,16 @@ class ExamCompiler(object):
         self.exam = exam.Exam()
         self.tab_db = GUIItemTable(show_l2=True,  # TODO option in GUI
                                    n_row=3,
-                                   show_hash=ExamCompiler.SHOW_HASHES,
+                                   show_hash=False,
                                    short_hashes=True,  # TODO option in GUI
                                    key='tab_database',
                                    tooltip='Item Database')
         self.tab_exam = GUIItemTable(show_l2=self.tab_db.show_l2,
                                      n_row=10,
-                                     show_hash=ExamCompiler.SHOW_HASHES,
+                                     show_hash=False,
                                      short_hashes=self.tab_db.short_hashes,
                                      key='tab_exam',
                                      tooltip='Exam Items')
-
-        self.txt_exam = sg.Multiline(size=(80, 30))
 
         self.layout = [
             [top_label([self.txt_base_directory,
@@ -66,7 +64,7 @@ class ExamCompiler(object):
                         label="Exam", border_width=2),
              ],
 
-            [self.tab_db.gui_element],
+            [self.tab_db.table],
             [
              sg.Button("add", size=(30, 2),
                        button_color= consts.COLOR_GREEN_BTN,
@@ -77,7 +75,7 @@ class ExamCompiler(object):
             sg.Button("up", size=(10, 2), key="move_up"),
             sg.Button("down", size=(10, 2), key="move_down")
             ],
-            [self.tab_exam.gui_element, self.txt_exam]]
+            [self.tab_exam.table, self.tab_exam.multiline]]
 
         self._unsaved_change = False
 
@@ -144,7 +142,7 @@ class ExamCompiler(object):
             self.tab_exam.set_selected(exam_tab_select_row)
 
         md = self.exam.markdown()
-        self.txt_exam.update(value=md)
+        self.tab_exam.multiline.update(value=md)
 
 
     def load_exam(self, json_filename):
@@ -276,28 +274,30 @@ class GUIItemTable(object):
         self.short_hashes = short_hashes
         self.show_l2 = show_l2
         headings, width = self.get_headings()
-        self.gui_element = sg.Table(values=[[""] * len(headings)],
-                                    col_widths=width,
-                                    headings=[str(x) for x in range(len(headings))],
-                                    max_col_width=500,
-                                    background_color='white',
-                                    auto_size_columns=False,
-                                    display_row_numbers=False,
-                                    select_mode=sg.TABLE_SELECT_MODE_BROWSE,
-                                    justification='left',
-                                    num_rows=n_row,
-                                    # enable_events=True,
-                                    bind_return_key=True,
-                                    # alternating_row_color='lightyellow',
-                                    key=key,
-                                    row_height=40,
-                                    vertical_scroll_only=False,
-                                    tooltip=tooltip)
+        self.table = sg.Table(values=[[""] * len(headings)],
+                              col_widths=width,
+                              headings=[str(x) for x in range(len(headings))],
+                              max_col_width=500,
+                              background_color='white',
+                              auto_size_columns=False,
+                              display_row_numbers=False,
+                              select_mode=sg.TABLE_SELECT_MODE_BROWSE,
+                              justification='left',
+                              num_rows=n_row,
+                              # enable_events=True,
+                              bind_return_key=True,
+                              # alternating_row_color='lightyellow',
+                              key=key,
+                              row_height=40,
+                              vertical_scroll_only=False,
+                              tooltip=tooltip)
+
+        self.multiline = sg.Multiline(size=(80, 30))
 
     def update_headings(self):
-        w = self.gui_element.Widget
+        w = self.table.Widget
         if w is not None:
-            for idx, txt in zip(self.gui_element.ColumnHeadings, self.get_headings()[0]):
+            for idx, txt in zip(self.table.ColumnHeadings, self.get_headings()[0]):
                 w.heading(idx, text=txt)
 
     def get_headings(self):
@@ -310,7 +310,7 @@ class GUIItemTable(object):
         return headings, width
 
     def get_row(self, row_num):
-        return self.gui_element.get()[row_num]
+        return self.table.get()[row_num]
 
     def set_items(self, items):
         values = []
@@ -321,10 +321,10 @@ class GUIItemTable(object):
                                   add_versions=self.show_hash,
                                   short_version=self.short_hashes)) # TODO short hashes
             values.append(d)
-        self.gui_element.update(values=values)
+        self.table.update(values=values)
         self.update_headings()
 
     def set_selected(self, selected):
         if not isinstance(selected, (list, tuple)):
             selected = [selected]
-        self.gui_element.update(select_rows=selected)
+        self.table.update(select_rows=selected)
