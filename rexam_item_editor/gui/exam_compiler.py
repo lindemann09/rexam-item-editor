@@ -4,9 +4,8 @@ import PySimpleGUI as sg
 from markdown import markdown
 
 from .. import __version__, APPNAME, consts
-from ..rexam.item_database import ItemDatabase
 from .json_settings import JSONSettings
-from .dialogs import top_label
+from .dialogs import top_label, ask_save
 from ..rexam import exam
 
 sg.theme_add_new("mytheme", consts.SG_COLOR_THEME)
@@ -27,21 +26,16 @@ class ExamCompiler(object):
         else:
             self.settings = settings
 
-        self.generate_html = True # TODO in gui
+        self.exam = exam.Exam()
+        self.exam.item_database_folder = getcwd()
 
-        self.txt_base_directory = sg.Text(self.base_directory, size=(60, 1),
+        self.txt_base_directory = sg.Text(self.exam.item_database_folder, size=(60, 1),
                                           background_color=consts.COLOR_BKG_ACTIVE_INFO)
         self.it_exam = sg.InputText("", size=(20, 1),
                                     enable_events=True,
                                     background_color=consts.COLOR_BKG_ACTIVE_INFO,
                                     key="change_name")
 
-        self.db = ItemDatabase(self.base_directory,
-                       files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
-                       files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
-                       check_for_bilingual_files=True) # FIXME set check_for_bilingual_files
-
-        self.exam = exam.Exam()
         self.gui_db = GUIItemTable(show_l2=False,
                                    n_row=8,
                                    show_hash=False,
@@ -83,36 +77,9 @@ class ExamCompiler(object):
             [sg.Frame("Exam", layout=[[self.gui_exam.table, self.gui_exam.multiline]])]
         ]
 
-        self._unsaved_change = False
         self._selected_row_tab_db = None
+        self.generate_html = True # TODO in gui
 
-
-    @property
-    def base_directory(self):
-        try:
-            return self.settings.recent_dirs[-1]
-        except:
-            return ""
-
-    @base_directory.setter
-    def base_directory(self, v):
-        # update recent_dir list
-        if len(self.settings.recent_dirs)>0 and v == self.settings.recent_dirs[-1]:
-            return # nothing changes
-
-        while True:
-            try:
-                self.settings.recent_dirs.remove(v)
-            except:
-                break
-        self.settings.recent_dirs.append(v)
-        self.settings.recent_dirs = self.settings.recent_dirs[
-                                    -1 * consts.MAX_RECENT_DIRS:] #limit n elements
-        #update db
-        self.db = ItemDatabase(base_directory=v,
-                   files_first_level=self.db.files_first_level,
-                   files_second_level=self.db.files_second_level,
-                   check_for_bilingual_files=self.db.check_for_bilingual_files)
 
     @property
     def exam_file(self):
@@ -121,7 +88,6 @@ class ExamCompiler(object):
     @exam_file.setter
     def exam_file(self, v):
         self.it_exam.update(value=v)
-        self._unsaved_change = True
 
     def _tmp_html_file(self):
         flname = self.exam_file.replace(".json", "")
@@ -133,18 +99,21 @@ class ExamCompiler(object):
     def update_tables(self, exam_tab_select_row=None):
         """table with item_id, name, short question l1 ,
            short question l2"""
-        self.exam.item_database = self.db
 
+        self.txt_base_directory.update(value=self.exam.item_database_folder)
         # exam
-        db_ids = self.exam.get_database_ids(rm_nones=False)
+        if self.exam.item_db is not None:
+            db_ids = self.exam.get_database_ids(rm_nones=False)
+        else:
+            db_ids = []
+
         tmp = []
         for quest, idx in zip(self.exam.questions, db_ids):
 
             if idx is None:
-                tmp.append(exam.EntryNotFound(quest, use_l2=True)) #FIXME set l2 bool
+                tmp.append(exam.EntryNotFound(quest, use_l2=True))
             else:
-                tmp.append(self.db.entries[idx])
-
+                tmp.append(self.exam.item_db.entries[idx])
         self.gui_exam.set_items(items=tmp)
         if exam_tab_select_row is not None:
             self.gui_exam.set_selected(exam_tab_select_row)
@@ -161,8 +130,11 @@ class ExamCompiler(object):
                     fl.write(markdown(md))
 
         # not in exam --> show in database
-        tmp = [x for x in self.db.selected_entries \
+        if self.exam.item_db is not None:
+            tmp = [x for x in self.exam.item_db.selected_entries \
                                 if x.id not in db_ids]
+        else:
+            tmp = []
         self.gui_db.set_items(items=tmp)
 
     @property
@@ -175,7 +147,7 @@ class ExamCompiler(object):
             self._selected_row_tab_db = v
             if v is not None:
                 cnt_selected = self.gui_db.get_row(v)[0]
-                tmp = self.db.entries[cnt_selected]
+                tmp = self.exam.item_db.entries[cnt_selected]
 
                 if self.gui_db.show_l2:
                     tmp = tmp.item_l2
@@ -186,7 +158,6 @@ class ExamCompiler(object):
                 txt += str(tmp)
                 self.gui_db.multiline.update(value=txt)
 
-
     def load_exam(self, json_filename):
         self.save_exam(ask=True)
         try:
@@ -194,18 +165,21 @@ class ExamCompiler(object):
         except Exception as e:
             return e
 
+        print(self.exam.item_db)
         self.exam_file = json_filename
         self.update_tables()
-        self._unsaved_change = False
         return True
 
     def save_exam(self, ask=True):
-        if self._unsaved_change and len(self.exam_file)>0:
+        if len(self.exam_file)>0 and exam.Exam(self.exam.json_filename).as_dict_list() != self.exam.as_dict_list():
+            # changes
+            if ask: # something has changed
+                if not ask_save(item_name=self.exam.json_filename):
+                    return
             self.exam.save(self.exam_file)
-            self._unsaved_change = False
 
     def reset_gui(self):
-        self.update_tables(exam_tab_select_row=None)
+        self.update_tables()
 
     def run(self):
 
@@ -213,9 +187,6 @@ class ExamCompiler(object):
                         self.layout, finalize=True,
                         return_keyboard_events=True,
                         enable_close_attempted_event=True)
-
-        if len(self.settings.recent_dirs) == 0: # very first launch
-            self.base_directory = getcwd()
 
         self.reset_gui()
         self.load_exam("demo.json") #FIXME
@@ -232,7 +203,7 @@ class ExamCompiler(object):
             elif event == "change_directory":
                 fld = sg.PopupGetFolder(message="", no_window=True)
                 if len(fld):
-                    self.base_directory = fld
+                    self.exam.item_database_folder = fld
                 self.reset_gui()
 
             elif event=="save_exam":
@@ -268,7 +239,6 @@ class ExamCompiler(object):
                 except:
                     continue # nothing selected
                 self.add_to_exam(selected_entry[0])
-                self._unsaved_change = True
 
             elif event=="remove_from_exam":
                 try:
@@ -276,7 +246,6 @@ class ExamCompiler(object):
                 except:
                     continue # nothing selected
                 self.remove_from_exam(selected_entry[0])
-                self._unsaved_change = True
 
             elif event=="move_up":
                 try:
@@ -285,7 +254,6 @@ class ExamCompiler(object):
                     continue # nothing selected
                 self.exam.replace(selected_entry, selected_entry-1)
                 self.update_tables(exam_tab_select_row=selected_entry - 1)
-                self._unsaved_change = True
 
             elif event=="move_down":
                 try:
@@ -294,25 +262,23 @@ class ExamCompiler(object):
                     continue # nothing selected
                 self.exam.replace(selected_entry, selected_entry+1)
                 self.update_tables(exam_tab_select_row=selected_entry + 1)
-                self._unsaved_change = True
 
             elif event=="change_name":
-                self._unsaved_change = True
+                pass #' TODO'
 
             else:
                 pass#   print(event)
 
         win.close()
-        self.save_exam(ask=True)
         self.settings.save()
 
     def add_to_exam(self, selected_entry):
-        item = self.db.entries[selected_entry]
+        item = self.exam.item_db.entries[selected_entry]
         self.exam.add_database_item(item)
         self.update_tables()
 
     def remove_from_exam(self, selected_entry):
-        item = self.db.entries[selected_entry]
+        item = self.exam.item_db.entries[selected_entry]
         self.exam.remove_item(item)
         self.update_tables()
 

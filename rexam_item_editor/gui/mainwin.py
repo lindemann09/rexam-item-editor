@@ -101,8 +101,8 @@ class MainWin(object):
                   [fr_base_dir, fr_item_name],
                   [left_frame]+ right_frames]
 
-        self.fl_list = BiLingRmdFileList(files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
-                                         files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
+        self.fl_list = BiLingRmdFileList(files_first_level=True, # TODO somewhere in seetings
+                                         files_second_level=True,
                                          check_for_bilingual_files=self.is_bilingual)
 
         self._unsaved_item = None
@@ -225,8 +225,8 @@ class MainWin(object):
                 exit()
 
         self.fl_list = BiLingRmdFileList(base_directory=self.base_directory,
-                                         files_first_level=consts.FILELIST_FIRST_LEVEL_FILES,
-                                         files_second_level=consts.FILELIST_SECOND_LEVEL_FILES,
+                                         files_first_level=self.fl_list.files_first_level,
+                                         files_second_level=self.fl_list.files_second_level,
                                          check_for_bilingual_files=self.is_bilingual)
 
         cnt = self.fl_list.get_count()

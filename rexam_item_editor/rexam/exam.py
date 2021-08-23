@@ -1,3 +1,4 @@
+import os
 import json
 import time
 
@@ -59,20 +60,28 @@ class Exam(object):
         """
         self.questions = []
         self._time_last_change = None
+        self._item_db_folder = None
         self.info = None
         self.json_filename = None
-        self._item_db = None
+        self.item_db = None
         if json_filename is not None:
             self.load(json_filename)
 
     @property
-    def item_database(self):
-        return self._item_db
+    def item_database_folder(self):
+        return self._item_db_folder
 
-    @item_database.setter
-    def item_database(self, v):
-        assert(isinstance(v, ItemDatabase))
-        self._item_db = v
+    @item_database_folder.setter
+    def item_database_folder(self, v):
+        if isinstance(v, str) and os.path.isdir(v):
+            self._item_db_folder = v
+            self.item_db = ItemDatabase(v,
+                                        files_first_level=True,
+                                        files_second_level=True,
+                                        check_for_bilingual_files=True)
+        else:
+            self._item_db_folder = None
+            self.item_db = None
 
     @staticmethod
     def time_stamp():
@@ -99,7 +108,8 @@ class Exam(object):
     def as_dict_list(self):
 
         return {"time" : self._time_last_change,
-             "names": [x.shared_name for x in self.questions],
+                "item_database_folder": self.item_database_folder,
+                "names": [x.shared_name for x in self.questions],
              "paths_l1": [x.path_l1 for x in self.questions],
              "paths_l2" : [x.path_l2 for x in self.questions],
              "hashes_l1": [x.hash_l1 for x in self.questions],
@@ -137,6 +147,10 @@ class Exam(object):
             self.info = d["info"]
         except:
             self.info = None
+        try:
+            self.item_database_folder = d["item_database_folder"]
+        except:
+            self.item_database_folder = None
 
         self.questions = []
         for x in range(len(d["names"])):
@@ -151,12 +165,12 @@ class Exam(object):
         """returns ids from item database or the question if not found
         takes into account the hashes!"""
 
-        if self._item_db is None:
+        if self.item_db is None:
             return []
 
         rtn = []
         for quest in self.questions:
-            idx = self._item_db.find(
+            idx = self.item_db.find(
                 hash_l1=quest.hash_l1 ,
                 hash_l2=quest.hash_l2,
                 shared_name=quest.shared_name,
@@ -199,13 +213,13 @@ class Exam(object):
             return False
 
     def markdown(self, use_l2=False, mark_correct=True):
-        if self._item_db is None:
+        if self.item_db is None:
             return ""
 
         rtn = ""
         for cnt, db_idx in enumerate(self.get_database_ids(rm_nones=False)):
             if db_idx is not None:
-                db_entry = self._item_db.entries[db_idx]
+                db_entry = self.item_db.entries[db_idx]
             else:
                 db_entry = EntryNotFound(self.questions[cnt])
 
