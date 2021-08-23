@@ -9,6 +9,10 @@ def run():
     if opt["exam_compiler"]:
         from .gui.exam_compiler import ExamCompiler
         ExamCompiler().run()
+    if opt["r_code"]:
+        from .rexam import exam
+        a = exam.Exam("demo.json")
+        print(a.rexam_code())
     else:
         from .gui.mainwin import MainWin
         MainWin(reset_settings=opt["reset"],
