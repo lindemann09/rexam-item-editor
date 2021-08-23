@@ -45,7 +45,8 @@ class ExamCompiler(object):
                                      short_hashes=self.gui_db.short_hashes,
                                      key='exam',
                                      tooltip='Exam Items')
-        self.cb_language2 = sg.Checkbox('Second language', key="cb_l2", enable_events=True)
+        self.cb_language2 = sg.Checkbox('Display Second language', key="cb_l2", enable_events=True)
+
         self.btn_save = sg.Button("Save", size=(12, 1), key="save_exam", disabled=True)
 
         self.layout = [
@@ -59,7 +60,9 @@ class ExamCompiler(object):
                         sg.FileSaveAs(button_text="New", file_types=(('json', '.json'),)),
                         ],
                         label="Exam", border_width=2),
-             self.cb_language2
+             self.cb_language2,
+             sg.Button("Rexam code", size=(10, 2), key="btn_r_code")
+
              ],
             [top_label([self.gui_db.table, self.gui_db.multiline], label="Database",  border_width=2)],
             [
@@ -160,7 +163,6 @@ class ExamCompiler(object):
         self.reset_gui()
         self.save_exam(ask=False)
 
-
     def load_exam(self, ):
         self.save_exam(ask=True)
         try:
@@ -215,7 +217,7 @@ class ExamCompiler(object):
         while True:
             win.refresh()
             event, values = win.read(timeout=5000)
-            print(event)
+            #print(event)
 
             if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or \
                     event == "Close" or event is None:
@@ -236,6 +238,9 @@ class ExamCompiler(object):
 
             elif event=="new_exam":
                 self.new_exam(values[event])
+
+            elif event=="btn_r_code":
+                sg.Print(self.exam.rexam_code(use_l2=self.gui_exam.show_l2), size=(120, 40))
 
             elif event==self.gui_db.key_tab:
 

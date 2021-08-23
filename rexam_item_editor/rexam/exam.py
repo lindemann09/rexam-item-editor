@@ -189,7 +189,6 @@ class Exam(object):
 
         return rtn
 
-
     def find_item(self, item):
         """returns question id first occurance if item"""
 
@@ -241,8 +240,37 @@ class Exam(object):
                                  highlight_correct_char=mark)
             rtn += q_str + "\n\n"
 
-
         return rtn.strip()
+
+    def rexam_code(self, use_l2=False):
+
+        code = "library(exams)\n\n"
+        code += "questions = c(\n"
+        for quest, db_id in zip(self.questions, self.get_database_ids(rm_nones=False)):
+            if use_l2:
+                p = quest.path_l2
+                h = quest.hash_l2
+            else:
+                p = quest.path_l1
+                h = quest.hash_l1
+
+            if db_id:
+                code += " "*6 + "'{}',\n".format(p)
+            else:
+                code += "#" + " " *5 + "'{}',  # CAN NOT FIND ITEM {} \n".format(p, h)
+
+        code = code.rstrip()[:-1] + "\n)\n"
+
+        code += """
+exams2pdf(questions,
+  encoding = 'UTF-8',
+  edir = {},
+  verbose = TRUE
+)
+""".format(self.item_database_folder)
+
+        return code
+
 
 
 class EntryNotFound(EntryItemDatabase):
