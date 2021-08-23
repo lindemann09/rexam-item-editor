@@ -198,12 +198,10 @@ class Exam(object):
         else:
             return False
 
-    def markdown(self, use_l2=False):
+    def markdown(self, use_l2=False, mark_correct=True):
         if self._item_db is None:
             return ""
 
-        old_tag = AnswerList.TAG_CORRECT
-        AnswerList.TAG_CORRECT = "* X"
         rtn = ""
         for cnt, db_idx in enumerate(self.get_database_ids(rm_nones=False)):
             if db_idx is not None:
@@ -216,10 +214,15 @@ class Exam(object):
             else:
                 tmp = db_entry.item_l1
 
-            q_str = tmp.markdown(enumerator=cnt + 1, wrap_text_width=80)
+            if mark_correct:
+                mark = "**"
+            else:
+                mark = ""
+            q_str = tmp.markdown(enumerator=cnt + 1, wrap_text_width=80,
+                                 tag_mark_correct=False,
+                                 highlight_correct_char=mark)
             rtn += q_str + "\n\n"
 
-        AnswerList.TAG_CORRECT = old_tag
 
         return rtn.strip()
 

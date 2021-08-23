@@ -1,5 +1,7 @@
-from os import getcwd
+from os import getcwd, path
+from math import floor
 import PySimpleGUI as sg
+from markdown import markdown
 
 from .. import __version__, APPNAME, consts
 from ..rexam.item_database import ItemDatabase
@@ -25,6 +27,8 @@ class ExamCompiler(object):
         else:
             self.settings = settings
 
+        self.generate_html = True # TODO in gui
+
         self.txt_base_directory = sg.Text(self.base_directory, size=(60, 1),
                                           background_color=consts.COLOR_BKG_ACTIVE_INFO)
         self.it_exam = sg.InputText("", size=(20, 1),
@@ -38,33 +42,34 @@ class ExamCompiler(object):
                        check_for_bilingual_files=True) # FIXME set check_for_bilingual_files
 
         self.exam = exam.Exam()
-        self.gui_db = GUIItemTable(show_l2=True,  # TODO option in GUI
-                                   n_row=3,
+        self.gui_db = GUIItemTable(show_l2=False,
+                                   n_row=8,
                                    show_hash=False,
-                                   short_hashes=True,  # TODO option in GUI
+                                   short_hashes=True,
                                    key='database',
                                    tooltip='Item Database')
         self.gui_exam = GUIItemTable(show_l2=self.gui_db.show_l2,
-                                     n_row=10,
+                                     n_row=8,
                                      show_hash=False,
                                      short_hashes=self.gui_db.short_hashes,
                                      key='exam',
                                      tooltip='Exam Items')
+        self.cb_language2 = sg.Checkbox('Second language', key="cb_l2", enable_events=True)
 
         self.layout = [
             [top_label([self.txt_base_directory,
                         sg.Button("change", size=(6, 1),
                                   key="change_directory")],
-                       label="Database Directory",border_width=2),
+                       label="Database Directory", border_width=2),
              top_label([self.it_exam,
                         sg.Button("save", size=(12, 1), key="save_exam"),
                         sg.Button("load", size=(4, 1), key="load_exam"),
                         sg.Button("new", size=(4, 1), key="load_exam")
                         ],
                         label="Exam", border_width=2),
+             self.cb_language2
              ],
-
-            [sg.Frame("Database", layout=[[self.gui_db.table, self.gui_db.multiline]])],
+            [top_label([self.gui_db.table, self.gui_db.multiline], label="Database",  border_width=2)],
             [
              sg.Button("add", size=(30, 2),
                        button_color= consts.COLOR_GREEN_BTN,
@@ -118,6 +123,12 @@ class ExamCompiler(object):
         self.it_exam.update(value=v)
         self._unsaved_change = True
 
+    def _tmp_html_file(self):
+        flname = self.exam_file.replace(".json", "")
+        if len(flname):
+            return path.abspath(flname) + ".tmp.html"
+        else:
+            return ""
 
     def update_tables(self, exam_tab_select_row=None):
         """table with item_id, name, short question l1 ,
@@ -138,14 +149,21 @@ class ExamCompiler(object):
         if exam_tab_select_row is not None:
             self.gui_exam.set_selected(exam_tab_select_row)
 
-        md = self.exam.markdown(self.gui_exam.show_l2)
+        # markdown and html
+        md = self.exam.markdown(use_l2=self.gui_exam.show_l2)
         self.gui_exam.multiline.update(value=md)
+
+        # save to .tmp.md file
+        if self.generate_html:
+            flname = self._tmp_html_file()
+            if len(flname):
+                with open(flname, "w", encoding=consts.FILE_ENCODING) as fl:
+                    fl.write(markdown(md))
 
         # not in exam --> show in database
         tmp = [x for x in self.db.selected_entries \
                                 if x.id not in db_ids]
         self.gui_db.set_items(items=tmp)
-
 
     @property
     def selected_db_row(self):
@@ -157,11 +175,15 @@ class ExamCompiler(object):
             self._selected_row_tab_db = v
             if v is not None:
                 cnt_selected = self.gui_db.get_row(v)[0]
-                x = self.db.entries[cnt_selected]
+                tmp = self.db.entries[cnt_selected]
+
                 if self.gui_db.show_l2:
-                    txt = str(x.item_l2)
+                    tmp = tmp.item_l2
                 else:
-                    txt = str(x.item_l1)
+                    tmp = tmp.item_l1
+
+                txt = "File {}\nHash {}\n\n".format(tmp.full_path, tmp.hash())
+                txt += str(tmp)
                 self.gui_db.multiline.update(value=txt)
 
 
@@ -178,8 +200,8 @@ class ExamCompiler(object):
         return True
 
     def save_exam(self, ask=True):
-        if self._unsaved_change:
-            self.exam.save(self.exam_file) # FIXME ASK
+        if self._unsaved_change and len(self.exam_file)>0:
+            self.exam.save(self.exam_file)
             self._unsaved_change = False
 
     def reset_gui(self):
@@ -200,7 +222,7 @@ class ExamCompiler(object):
 
         while True:
             win.refresh()
-            event, values = win.read()
+            event, values = win.read(timeout=5000)
 
             if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or \
                     event == "Close" or event is None:
@@ -223,11 +245,22 @@ class ExamCompiler(object):
                 pass # TODO
 
             elif event==self.gui_db.key_tab:
-                self.selected_db_row = values[event][0]
+
+                try:
+                    self.selected_db_row = values[event][0]
+                except:
+                    old = self.selected_db_row
+                    self.selected_db_row = None
+                    self.gui_db.set_selected(old)
 
             #elif event==self.gui_exam.key_tab:
             #    selected_entry = self.gui_exam.get_row()
             #    #TODO
+
+            elif event == "cb_l2":
+                self.gui_db.show_l2 = values[event]
+                self.gui_exam.show_l2 = values[event]
+                self.update_tables()
 
             elif event=="add_to_exam":
                 try:
@@ -267,7 +300,7 @@ class ExamCompiler(object):
                 self._unsaved_change = True
 
             else:
-                pass #print(event)
+                pass#   print(event)
 
         win.close()
         self.save_exam(ask=True)
@@ -287,16 +320,15 @@ class ExamCompiler(object):
 class GUIItemTable(object):
     LANGUAGES = ("Dutch", "English")
 
-    def __init__(self, n_row, key, tooltip, max_lines = 3,
+    def __init__(self, n_row, key, tooltip, max_lines = 1, font='Courier', font_size = 10,
                  show_l2 = False, show_hash=True, short_hashes=True):
         self.max_lines = max_lines
         self.show_hash = show_hash
         self.short_hashes = short_hashes
         self.show_l2 = show_l2
         headings, width = self.get_headings()
-
+        row_height = 30
         self.key_tab = key+"_tab"
-        self.key_multiline = key+"_ml"
 
         self.table = sg.Table(values=[[""] * len(headings)],
                               col_widths=width,
@@ -312,13 +344,12 @@ class GUIItemTable(object):
                               bind_return_key=True,
                               # alternating_row_color='lightyellow',
                               key=self.key_tab,
-                              row_height=40,
+                              row_height=row_height,
+                              font='{} {}'.format(font, font_size),
                               vertical_scroll_only=False,
                               tooltip=tooltip)
-
-        self.multiline = sg.Multiline(size=(80, 30),
-                                      key=self.key_multiline)
-
+        h = floor(row_height * n_row/(1.4*font_size))
+        self.multiline = sg.Multiline(size=(80, h),  font='{} {}'.format(font, font_size),)
 
 
     def update_headings(self):
@@ -330,7 +361,7 @@ class GUIItemTable(object):
     def get_headings(self):
         headings = ["Cnt", "Name",
                     GUIItemTable.LANGUAGES[int(self.show_l2)]]
-        width = [5, 10, 50]
+        width = [5, 10, 70]
         if self.show_hash:
             headings.append("Hash")
             width.append(10)

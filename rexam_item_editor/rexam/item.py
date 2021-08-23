@@ -179,18 +179,24 @@ class AnswerList(ItemSection):
             except:
                 self._correct.append(False)
 
-    def str_answers(self, mark_correct_solutions=False):
+    def str_answers(self, tag_mark_correct=False, highlight_correct_before_after=""):
+        """mark_correct add chars before and after correct e.g. '**' for markdown bold"""
         rtn = ""
         for ans, correct, tab_sep in zip(self.answers, self._correct, self._tab_sep):
-            if mark_correct_solutions and correct:
+            if tag_mark_correct and correct:
                 tag = AnswerList.TAG_CORRECT
             else:
                 tag = AnswerList.TAG_ITEM
 
-            if tab_sep:
-                rtn += "{}\t{}\n".format(tag, ans)
+            if correct:
+                mark = highlight_correct_before_after
             else:
-                rtn += "{} {}\n".format(tag, ans)
+                mark = ""
+
+            if tab_sep:
+                rtn += "{}\t{}{}{}\n".format(tag, mark, ans, mark)
+            else:
+                rtn += "{} {}{}{}\n".format(tag, mark, ans, mark)
 
         return rtn
 
@@ -478,7 +484,7 @@ class RExamItem(RmdFile):
             return RExamItem(RmdFile(file_path,
                                      base_directory=base_directory))
 
-    def markdown(self, enumerator=None, wrap_text_width=0):
+    def markdown(self, enumerator=None, wrap_text_width=0, tag_mark_correct=True, highlight_correct_char=""):
         '''optional counter to enumerate questions'''
         question_str = self.question.str_text(ignore_empty_lines=False,
                                               wrap_text_width=wrap_text_width)
@@ -486,7 +492,8 @@ class RExamItem(RmdFile):
         if self.question.answer_list is not None:
             question_str += "\n\n" + \
                             self.question.answer_list.str_answers(
-                                mark_correct_solutions=True)
+                                tag_mark_correct=tag_mark_correct,
+                                highlight_correct_before_after=highlight_correct_char)
 
         if len(question_str.strip()):
             rtn = "# Question "
