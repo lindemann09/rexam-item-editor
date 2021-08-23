@@ -45,7 +45,7 @@ class ExamCompiler(object):
                                      short_hashes=self.gui_db.short_hashes,
                                      key='exam',
                                      tooltip='Exam Items')
-        self.cb_language2 = sg.Checkbox('Display Second language', key="cb_l2", enable_events=True)
+        self.cb_language2 = sg.Checkbox('Display Second Language', key="cb_l2", enable_events=True)
 
         self.btn_save = sg.Button("Save", size=(12, 1), key="save_exam", disabled=True)
 
