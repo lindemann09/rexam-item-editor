@@ -38,17 +38,17 @@ class ExamCompiler(object):
                        check_for_bilingual_files=True) # FIXME set check_for_bilingual_files
 
         self.exam = exam.Exam()
-        self.tab_db = GUIItemTable(show_l2=True,  # TODO option in GUI
+        self.gui_db = GUIItemTable(show_l2=True,  # TODO option in GUI
                                    n_row=3,
                                    show_hash=False,
                                    short_hashes=True,  # TODO option in GUI
-                                   key='tab_database',
+                                   key='database',
                                    tooltip='Item Database')
-        self.tab_exam = GUIItemTable(show_l2=self.tab_db.show_l2,
+        self.gui_exam = GUIItemTable(show_l2=self.gui_db.show_l2,
                                      n_row=10,
                                      show_hash=False,
-                                     short_hashes=self.tab_db.short_hashes,
-                                     key='tab_exam',
+                                     short_hashes=self.gui_db.short_hashes,
+                                     key='exam',
                                      tooltip='Exam Items')
 
         self.layout = [
@@ -64,7 +64,7 @@ class ExamCompiler(object):
                         label="Exam", border_width=2),
              ],
 
-            [self.tab_db.table],
+            [sg.Frame("Database", layout=[[self.gui_db.table, self.gui_db.multiline]])],
             [
              sg.Button("add", size=(30, 2),
                        button_color= consts.COLOR_GREEN_BTN,
@@ -75,9 +75,11 @@ class ExamCompiler(object):
             sg.Button("up", size=(10, 2), key="move_up"),
             sg.Button("down", size=(10, 2), key="move_down")
             ],
-            [self.tab_exam.table, self.tab_exam.multiline]]
+            [sg.Frame("Exam", layout=[[self.gui_exam.table, self.gui_exam.multiline]])]
+        ]
 
         self._unsaved_change = False
+        self._selected_row_tab_db = None
 
 
     @property
@@ -117,7 +119,7 @@ class ExamCompiler(object):
         self._unsaved_change = True
 
 
-    def update_table(self, exam_tab_select_row=None):
+    def update_tables(self, exam_tab_select_row=None):
         """table with item_id, name, short question l1 ,
            short question l2"""
         self.exam.item_database = self.db
@@ -132,17 +134,35 @@ class ExamCompiler(object):
             else:
                 tmp.append(self.db.entries[idx])
 
-        self.tab_exam.set_items(items=tmp)
+        self.gui_exam.set_items(items=tmp)
+        if exam_tab_select_row is not None:
+            self.gui_exam.set_selected(exam_tab_select_row)
+
+        md = self.exam.markdown(self.gui_exam.show_l2)
+        self.gui_exam.multiline.update(value=md)
+
         # not in exam --> show in database
         tmp = [x for x in self.db.selected_entries \
                                 if x.id not in db_ids]
-        self.tab_db.set_items(items=tmp)
+        self.gui_db.set_items(items=tmp)
 
-        if exam_tab_select_row is not None:
-            self.tab_exam.set_selected(exam_tab_select_row)
 
-        md = self.exam.markdown()
-        self.tab_exam.multiline.update(value=md)
+    @property
+    def selected_db_row(self):
+        return self._selected_row_tab_db
+
+    @selected_db_row.setter
+    def selected_db_row(self, v):
+        if v != self._selected_row_tab_db:
+            self._selected_row_tab_db = v
+            if v is not None:
+                cnt_selected = self.gui_db.get_row(v)[0]
+                x = self.db.entries[cnt_selected]
+                if self.gui_db.show_l2:
+                    txt = str(x.item_l2)
+                else:
+                    txt = str(x.item_l1)
+                self.gui_db.multiline.update(value=txt)
 
 
     def load_exam(self, json_filename):
@@ -153,7 +173,7 @@ class ExamCompiler(object):
             return e
 
         self.exam_file = json_filename
-        self.update_table()
+        self.update_tables()
         self._unsaved_change = False
         return True
 
@@ -163,7 +183,7 @@ class ExamCompiler(object):
             self._unsaved_change = False
 
     def reset_gui(self):
-        self.update_table(exam_tab_select_row=None)
+        self.update_tables(exam_tab_select_row=None)
 
     def run(self):
 
@@ -181,6 +201,7 @@ class ExamCompiler(object):
         while True:
             win.refresh()
             event, values = win.read()
+
             if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or \
                     event == "Close" or event is None:
                 self.save_exam(ask=True)
@@ -201,17 +222,16 @@ class ExamCompiler(object):
             elif event=="new_exam":
                 pass # TODO
 
-            elif event=="tab_database":
-                selected_entry = self.tab_db.get_row(values[event][0])
-                #TODO
+            elif event==self.gui_db.key_tab:
+                self.selected_db_row = values[event][0]
 
-            elif event=="tab_exam":
-                selected_entry = self.tab_exam.get_row(values[event][0])
-                #TODO
+            #elif event==self.gui_exam.key_tab:
+            #    selected_entry = self.gui_exam.get_row()
+            #    #TODO
 
             elif event=="add_to_exam":
                 try:
-                    selected_entry = self.tab_db.get_row(values["tab_database"][0])
+                    selected_entry = self.gui_db.get_row(values[self.gui_db.key_tab][0])
                 except:
                     continue # nothing selected
                 self.add_to_exam(selected_entry[0])
@@ -219,7 +239,7 @@ class ExamCompiler(object):
 
             elif event=="remove_from_exam":
                 try:
-                    selected_entry = self.tab_exam.get_row(values["tab_exam"][0])
+                    selected_entry = self.gui_exam.get_row(values[self.gui_exam.key_tab][0])
                 except:
                     continue # nothing selected
                 self.remove_from_exam(selected_entry[0])
@@ -227,20 +247,20 @@ class ExamCompiler(object):
 
             elif event=="move_up":
                 try:
-                    selected_entry = values["tab_exam"][0]
+                    selected_entry = values[self.gui_exam.key_tab][0]
                 except:
                     continue # nothing selected
                 self.exam.replace(selected_entry, selected_entry-1)
-                self.update_table(exam_tab_select_row=selected_entry-1)
+                self.update_tables(exam_tab_select_row=selected_entry - 1)
                 self._unsaved_change = True
 
             elif event=="move_down":
                 try:
-                    selected_entry = values["tab_exam"][0]
+                    selected_entry = values[self.gui_exam.key_tab][0]
                 except:
                     continue # nothing selected
                 self.exam.replace(selected_entry, selected_entry+1)
-                self.update_table(exam_tab_select_row=selected_entry+1)
+                self.update_tables(exam_tab_select_row=selected_entry + 1)
                 self._unsaved_change = True
 
             elif event=="change_name":
@@ -256,12 +276,12 @@ class ExamCompiler(object):
     def add_to_exam(self, selected_entry):
         item = self.db.entries[selected_entry]
         self.exam.add_database_item(item)
-        self.update_table()
+        self.update_tables()
 
     def remove_from_exam(self, selected_entry):
         item = self.db.entries[selected_entry]
         self.exam.remove_item(item)
-        self.update_table()
+        self.update_tables()
 
 
 class GUIItemTable(object):
@@ -274,6 +294,10 @@ class GUIItemTable(object):
         self.short_hashes = short_hashes
         self.show_l2 = show_l2
         headings, width = self.get_headings()
+
+        self.key_tab = key+"_tab"
+        self.key_multiline = key+"_ml"
+
         self.table = sg.Table(values=[[""] * len(headings)],
                               col_widths=width,
                               headings=[str(x) for x in range(len(headings))],
@@ -284,15 +308,18 @@ class GUIItemTable(object):
                               select_mode=sg.TABLE_SELECT_MODE_BROWSE,
                               justification='left',
                               num_rows=n_row,
-                              # enable_events=True,
+                              enable_events=True,
                               bind_return_key=True,
                               # alternating_row_color='lightyellow',
-                              key=key,
+                              key=self.key_tab,
                               row_height=40,
                               vertical_scroll_only=False,
                               tooltip=tooltip)
 
-        self.multiline = sg.Multiline(size=(80, 30))
+        self.multiline = sg.Multiline(size=(80, 30),
+                                      key=self.key_multiline)
+
+
 
     def update_headings(self):
         w = self.table.Widget
