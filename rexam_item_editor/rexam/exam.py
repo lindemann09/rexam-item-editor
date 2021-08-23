@@ -151,9 +151,13 @@ class Exam(object):
             self.item_database_folder = d["item_database_folder"]
         except:
             self.item_database_folder = None
+        try:
+            names = d["names"]
+        except:
+            names = []
 
         self.questions = []
-        for x in range(len(d["names"])):
+        for x in range(len(names)):
 
             self.questions.append(ExamQuestion(shared_name=d["names"][x],
                                                path_l1=d["paths_l1"][x],

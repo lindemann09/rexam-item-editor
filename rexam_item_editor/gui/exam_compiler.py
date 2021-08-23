@@ -31,10 +31,7 @@ class ExamCompiler(object):
 
         self.txt_base_directory = sg.Text(self.exam.item_database_folder, size=(60, 1),
                                           background_color=consts.COLOR_BKG_ACTIVE_INFO)
-        self.it_exam = sg.InputText("", size=(20, 1),
-                                    enable_events=True,
-                                    background_color=consts.COLOR_BKG_ACTIVE_INFO,
-                                    key="change_name")
+        self.txt_exam = sg.Text("", size=(20, 1), background_color=consts.COLOR_BKG_ACTIVE_INFO)
 
         self.gui_db = GUIItemTable(show_l2=False,
                                    n_row=8,
@@ -49,16 +46,17 @@ class ExamCompiler(object):
                                      key='exam',
                                      tooltip='Exam Items')
         self.cb_language2 = sg.Checkbox('Second language', key="cb_l2", enable_events=True)
+        self.btn_save = sg.Button("Save", size=(12, 1), key="save_exam", disabled=True)
 
         self.layout = [
             [top_label([self.txt_base_directory,
                         sg.Button("change", size=(6, 1),
                                   key="change_directory")],
                        label="Database Directory", border_width=2),
-             top_label([self.it_exam,
-                        sg.Button("save", size=(12, 1), key="save_exam"),
-                        sg.Button("load", size=(4, 1), key="load_exam"),
-                        sg.Button("new", size=(4, 1), key="load_exam")
+             top_label([self.txt_exam, self.btn_save,
+                        sg.Button("Load", size=(4, 1), key="load_exam"),
+                        sg.InputText(visible=False, enable_events=True, key='new_exam'),
+                        sg.FileSaveAs(button_text="New", file_types=(('json', '.json'),)),
                         ],
                         label="Exam", border_width=2),
              self.cb_language2
@@ -81,16 +79,11 @@ class ExamCompiler(object):
         self.generate_html = True # TODO in gui
 
 
-    @property
-    def exam_file(self):
-        return self.it_exam.get()
-
-    @exam_file.setter
-    def exam_file(self, v):
-        self.it_exam.update(value=v)
-
     def _tmp_html_file(self):
-        flname = self.exam_file.replace(".json", "")
+        try:
+            flname = self.exam.json_filename.replace(".json", "")
+        except:
+            return ""
         if len(flname):
             return path.abspath(flname) + ".tmp.html"
         else:
@@ -158,27 +151,56 @@ class ExamCompiler(object):
                 txt += str(tmp)
                 self.gui_db.multiline.update(value=txt)
 
-    def load_exam(self, json_filename):
+    def new_exam(self, new_file):
         self.save_exam(ask=True)
+        fld = self.exam.item_database_folder
+        self.exam = exam.Exam()
+        self.exam.json_filename = new_file
+        self.exam.item_database_folder = fld
+        self.reset_gui()
+        self.save_exam(ask=False)
+
+
+    def load_exam(self, ):
+        self.save_exam(ask=True)
+        try:
+            default_path = path.split(self.exam.json_filename)[0]
+        except:
+            default_path = getcwd()
+        json_filename = sg.PopupGetFile("", default_path = default_path,
+                                        no_window = True,
+                                        file_types = (('*.json', '*.json'),('ALL Files', '*.*')))
         try:
             self.exam.load(json_filename)
         except Exception as e:
             return e
 
-        print(self.exam.item_db)
-        self.exam_file = json_filename
-        self.update_tables()
+        self.reset_gui()
         return True
 
     def save_exam(self, ask=True):
-        if len(self.exam_file)>0 and exam.Exam(self.exam.json_filename).as_dict_list() != self.exam.as_dict_list():
+        if self.btn_save.Disabled:
+            return
+
+        try:
+            already_saved_dict = exam.Exam(self.exam.json_filename).as_dict_list()
+        except:
+            already_saved_dict = None
+
+        if already_saved_dict is None or already_saved_dict != self.exam.as_dict_list():
             # changes
             if ask: # something has changed
                 if not ask_save(item_name=self.exam.json_filename):
                     return
-            self.exam.save(self.exam_file)
+            self.exam.save(self.exam.json_filename)
 
     def reset_gui(self):
+        if self.exam.json_filename is None:
+            name = ""
+        else:
+            name = path.split(self.exam.json_filename)[1]
+        self.txt_exam.update(value=name)
+        self.btn_save.update(disabled=not bool(len(name)))
         self.update_tables()
 
     def run(self):
@@ -189,11 +211,11 @@ class ExamCompiler(object):
                         enable_close_attempted_event=True)
 
         self.reset_gui()
-        self.load_exam("demo.json") #FIXME
 
         while True:
             win.refresh()
             event, values = win.read(timeout=5000)
+            print(event)
 
             if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or \
                     event == "Close" or event is None:
@@ -210,10 +232,10 @@ class ExamCompiler(object):
                 self.save_exam(ask=False)
 
             elif event=="load_exam":
-                pass # TODO
+                self.load_exam()
 
             elif event=="new_exam":
-                pass # TODO
+                self.new_exam(values[event])
 
             elif event==self.gui_db.key_tab:
 
@@ -262,9 +284,6 @@ class ExamCompiler(object):
                     continue # nothing selected
                 self.exam.replace(selected_entry, selected_entry+1)
                 self.update_tables(exam_tab_select_row=selected_entry + 1)
-
-            elif event=="change_name":
-                pass #' TODO'
 
             else:
                 pass#   print(event)
