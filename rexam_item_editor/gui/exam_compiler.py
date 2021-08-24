@@ -1,7 +1,10 @@
 from os import getcwd, path
 from math import floor
 import PySimpleGUI as sg
-from markdown import markdown
+try:
+    from markdown import markdown
+except:
+    markdown = None
 
 from .. import __version__, APPNAME, consts
 from .json_settings import JSONSettings
@@ -21,7 +24,7 @@ class ExamCompiler(object):
             self.settings = JSONSettings(
                          appname=APPNAME.replace(" ", "_").lower(),
                          settings_file_name="settings.json",
-                         defaults= {"recent_dirs": []},
+                         defaults= {"last_exam_file": None},
                          reset=False)
         else:
             self.settings = settings
@@ -45,7 +48,7 @@ class ExamCompiler(object):
                                      short_hashes=self.gui_db.short_hashes,
                                      key='exam',
                                      tooltip='Exam Items')
-        self.cb_language2 = sg.Checkbox('Display Second Language', key="cb_l2", enable_events=True)
+        self.cb_language2 = sg.Checkbox('Second Language', key="cb_l2", enable_events=True)
 
         self.btn_save = sg.Button("Save", size=(12, 1), key="save_exam", disabled=True)
 
@@ -60,9 +63,9 @@ class ExamCompiler(object):
                         sg.FileSaveAs(button_text="New", file_types=(('json', '.json'),)),
                         ],
                         label="Exam", border_width=2),
-             self.cb_language2,
-             sg.Button("Rexam code", size=(10, 2), key="btn_r_code")
-
+             top_label([self.cb_language2], label="Display", border_width=2),
+             top_label([sg.Button("Rexam code", size=(10, 1), key="btn_r_code"),
+                        sg.Button("Close", size=(10, 1), key="btn_close")], label="Window", border_width=2),
              ],
             [top_label([self.gui_db.table, self.gui_db.multiline], label="Database",  border_width=2)],
             [
@@ -79,7 +82,7 @@ class ExamCompiler(object):
         ]
 
         self._selected_row_tab_db = None
-        self.generate_html = True # TODO in gui
+        self.generate_html = False  # FIXME in GUI
 
 
     def _tmp_html_file(self):
@@ -118,8 +121,8 @@ class ExamCompiler(object):
         md = self.exam.markdown(use_l2=self.gui_exam.show_l2)
         self.gui_exam.multiline.update(value=md)
 
-        # save to .tmp.md file
-        if self.generate_html:
+        # save to .tmp.html file
+        if self.generate_html and markdown is not None:
             flname = self._tmp_html_file()
             if len(flname):
                 with open(flname, "w", encoding=consts.FILE_ENCODING) as fl:
@@ -163,7 +166,7 @@ class ExamCompiler(object):
         self.reset_gui()
         self.save_exam(ask=False)
 
-    def load_exam(self, ):
+    def load_exam(self):
         self.save_exam(ask=True)
         try:
             default_path = path.split(self.exam.json_filename)[0]
@@ -212,6 +215,12 @@ class ExamCompiler(object):
                         return_keyboard_events=True,
                         enable_close_attempted_event=True)
 
+        if self.settings.last_exam_file:
+            try:
+                self.exam.load(self.settings.last_exam_file)
+            except:
+                pass
+
         self.reset_gui()
 
         while True:
@@ -220,7 +229,7 @@ class ExamCompiler(object):
             #print(event)
 
             if event == sg.WINDOW_CLOSE_ATTEMPTED_EVENT or \
-                    event == "Close" or event is None:
+                    event == "Close" or event == "btn_close":
                 self.save_exam(ask=True)
                 break
 
@@ -294,6 +303,8 @@ class ExamCompiler(object):
                 pass#   print(event)
 
         win.close()
+
+        self.settings.last_exam_file = self.exam.json_filename
         self.settings.save()
 
     def add_to_exam(self, selected_entry):

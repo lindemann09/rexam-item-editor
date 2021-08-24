@@ -135,7 +135,7 @@ class Exam(object):
             fl.write(json.dumps(d, indent = 2))
 
     def load(self, json_filename):
-        self.json_filename = json_filename
+
         with open(json_filename, 'r', encoding=FILE_ENCODING) as fl:
             d = json.load(fl)
 
@@ -158,12 +158,12 @@ class Exam(object):
 
         self.questions = []
         for x in range(len(names)):
-
             self.questions.append(ExamQuestion(shared_name=d["names"][x],
                                                path_l1=d["paths_l1"][x],
                                                path_l2=d["paths_l2"][x],
                                                hash_l1=d["hashes_l1"][x],
                                                hash_l2=d["hashes_l2"][x]))
+        self.json_filename = json_filename
 
     def get_database_ids(self, rm_nones=False):
         """returns ids from item database or the question if not found
