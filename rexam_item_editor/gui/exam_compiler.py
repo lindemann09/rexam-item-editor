@@ -84,7 +84,6 @@ class ExamCompiler(object):
         self._selected_row_tab_db = None
         self.generate_html = False  # FIXME in GUI
 
-
     def _tmp_html_file(self):
         try:
             flname = self.exam.json_filename.replace(".json", "")
