@@ -9,6 +9,7 @@ from ..rexam.item import RExamItem, AnswerList
 from . import dialogs
 from .json_settings import JSONSettings
 from .gui_item import GUIItem
+from .gui_misc import GUIBaseDirectory
 from .log import log
 
 sg.theme_add_new("mytheme", consts.SG_COLOR_THEME)
@@ -16,7 +17,6 @@ sg.theme("mytheme")
 
 LANG1_EVENT_PREFIX = "Lang1"
 LANG2_EVENT_PREFIX = "Lang2"
-
 
 
 class MainWin(object):
@@ -68,10 +68,8 @@ class MainWin(object):
                                   disabled=True,
                                   key="save")
 
-        self.txt_base_directory = sg.Text(self.base_directory, size=(60, 1),
-                                          background_color=consts.COLOR_BKG_ACTIVE_INFO)
-        fr_base_dir = sg.Frame("Database Directory",
-                             [[self.txt_base_directory]])
+        self.gui_base_directory = GUIBaseDirectory(database_folder=self.base_directory,
+                                                   key="btn_change_dir")
 
         self.txt_name = sg.Text("", size=(30, 1),
                                 background_color=consts.COLOR_BKG_ACTIVE_INFO)
@@ -99,8 +97,8 @@ class MainWin(object):
 
         self.layout = [
                   [self.menu],
-                  [fr_base_dir, fr_item_name],
-                  [left_frame]+ right_frames]
+                  [self.gui_base_directory.frame, fr_item_name],
+                  [left_frame] + right_frames]
 
         self.fl_list = BiLingRmdFileList(files_first_level=True, # TODO somewhere in seetings
                                          files_second_level=True,
@@ -162,7 +160,7 @@ class MainWin(object):
                 break
         self.settings.recent_dirs.append(v)
         self.settings.recent_dirs = self.settings.recent_dirs[
-                                    -1 * consts.MAX_RECENT_DIRS:] #limit n elements         self.update_item_list()
+                                    -1 * consts.MAX_RECENT_DIRS:]  # limit n elements  self.update_item_list()
 
     @property
     def idx_selected_item(self):
@@ -217,7 +215,7 @@ class MainWin(object):
             self.btn_second_lang.update(disabled=True)
 
         # dir information
-        self.txt_base_directory.update(value=self.base_directory)
+        self.gui_base_directory.update_folder(self.base_directory)
 
     def update_item_list(self):
         if not path.isdir(self.base_directory):
@@ -269,7 +267,6 @@ class MainWin(object):
         if selected_file is not None:
             self.select_item_by_filename(selected_file)
 
-
     def run(self):
         win = sg.Window("{} ({})".format(APPNAME, __version__),
                         self.layout, finalize=True, return_keyboard_events=True,
@@ -310,7 +307,6 @@ class MainWin(object):
             return ExamCompiler().run(database_folder=self.base_directory)
         elif restart:
             return MainWin().run()
-
 
     def process_item_gui_event(self, event, values):
         # ItemGUI events have to start with LANG1_PREFIX or LANG2_PREFIX
@@ -356,7 +352,6 @@ class MainWin(object):
                     return
             ig.update_gui()
 
-
     def process_event(self, event, _values):
         """returns None or event if a restart is required"""
 
@@ -382,9 +377,9 @@ class MainWin(object):
             else: # selected
                 self.load_selected_item()
 
-        elif event == "Open Directory" or event in self.settings.recent_dirs:
+        elif event in ["Open Directory", "btn_change_dir"] or event in self.settings.recent_dirs:
             self.save_items(ask=True)
-            if event == "Open Directory":
+            if event in ["Open Directory", "btn_change_dir"]:
                 fld = sg.PopupGetFolder(message="", no_window=True)
                 if len(fld):
                     self.base_directory = fld
@@ -426,7 +421,6 @@ class MainWin(object):
             self.reset_gui()
 
         elif event == "Single Language Mode" or event == "Bilingual Mode":
-            #sg.PopupOK("Restart App", "Please restart '{}' to switch to the new presentation mode.".format(APPNAME), keep_on_top=True)
             self.settings.bilingual = event == "Bilingual Mode"
             self.settings.save()
             self.save_items(ask=True)

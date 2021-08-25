@@ -10,9 +10,12 @@ from .. import __version__, APPNAME, consts
 from .json_settings import JSONSettings
 from .dialogs import top_label, ask_save
 from ..rexam import exam
+from .gui_misc import GUIBaseDirectory
 
 sg.theme_add_new("mytheme", consts.SG_COLOR_THEME)
 sg.theme("mytheme")
+
+
 
 
 class ExamCompiler(object):
@@ -32,8 +35,8 @@ class ExamCompiler(object):
         self.exam = exam.Exam()
         self.exam.item_database_folder = getcwd()
 
-        self.txt_base_directory = sg.Text(self.exam.item_database_folder, size=(60, 1),
-                                          background_color=consts.COLOR_BKG_ACTIVE_INFO)
+        self.gui_base_directory = GUIBaseDirectory(self.exam.item_database_folder)
+
         self.txt_exam = sg.Text("", size=(20, 1), background_color=consts.COLOR_BKG_ACTIVE_INFO)
 
         self.gui_db = GUIItemTable(show_l2=False,
@@ -53,10 +56,7 @@ class ExamCompiler(object):
         self.btn_save = sg.Button("Save", size=(12, 1), key="save_exam", disabled=True)
 
         self.layout = [
-            [top_label([self.txt_base_directory,
-                        sg.Button("change", size=(6, 1),
-                                  key="change_directory")],
-                       label="Database Directory", border_width=2),
+            [self.gui_base_directory.frame,
              top_label([self.txt_exam, self.btn_save,
                         sg.Button("Load", size=(4, 1), key="load_exam"),
                         sg.InputText(visible=False, enable_events=True, key='new_exam'),
@@ -98,7 +98,7 @@ class ExamCompiler(object):
         """table with item_id, name, short question l1 ,
            short question l2"""
 
-        self.txt_base_directory.update(value=self.exam.item_database_folder)
+        self.gui_base_directory.update_folder(self.exam.item_database_folder)
         # exam
         if self.exam.item_db is not None:
             db_ids = self.exam.get_database_ids(rm_nones=False)

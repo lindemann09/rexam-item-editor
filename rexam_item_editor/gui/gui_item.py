@@ -153,9 +153,10 @@ class GUIItem(object):
         if self.disabled:
             return
         if value:
-            col =  consts.COLOR_BKG_ACTIVE
+            col = consts.COLOR_BKG_ACTIVE
         else:
             col = consts.COLOR_BKG_INACTIVE
+
         self.ml_quest.update(disabled=not value, background_color=col)
         self.ml_answer.update(disabled=not value, background_color=col)
         self.ml_solution.update(disabled=not value, background_color=col)

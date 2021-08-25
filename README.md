@@ -29,6 +29,7 @@ Python 3.7+ and the following libraries:
 
 Optional requirement:
 * rpy2 >=3.4
+* markdown >=3.0
 
 
 ## Rendering Rmd File (work in progress)
