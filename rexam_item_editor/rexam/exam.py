@@ -122,11 +122,10 @@ class Exam(object):
                 "item_database_folder": self.item_database_folder,
                 "git_head": self.git_head,
                 "names": [x.shared_name for x in self.questions],
-             "paths_l1": [x.path_l1 for x in self.questions],
-             "paths_l2" : [x.path_l2 for x in self.questions],
-             "hashes_l1": [x.hash_l1 for x in self.questions],
-             "hashes_l2": [x.hash_l2 for x in self.questions]
-              }
+                "paths_l1": [x.path_l1 for x in self.questions],
+                "paths_l2" : [x.path_l2 for x in self.questions],
+                "hashes_l1": [x.hash_l1 for x in self.questions],
+                "hashes_l2": [x.hash_l2 for x in self.questions]}
 
     def save(self, json_filename=None, info=None, reset_git_head=True):
         if json_filename is None:

@@ -10,13 +10,13 @@ from .. import __version__, APPNAME, consts
 from .json_settings import JSONSettings
 from .dialogs import ask_save
 from ..rexam import exam
-from .gui_misc import GUIBaseDirectory, labeled_frame
+from .gui_misc import GUIBaseDirectory, labeled_frame, set_font
 
 
 class ExamCompiler(object):
     SHOW_HASHES = True
 
-    def __init__(self, settings=None):
+    def __init__(self, settings=None, font=None, font_size=9):
 
         if not isinstance(settings, JSONSettings):
             self.settings = JSONSettings(
@@ -27,9 +27,11 @@ class ExamCompiler(object):
         else:
             self.settings = settings
 
+
         self.exam = exam.Exam()
         self.exam.item_database_folder = getcwd()
 
+        set_font(font, font_size)
         self.gui_base_directory = GUIBaseDirectory(self.exam.item_database_folder)
 
         self.txt_exam = sg.Text("", size=(20, 1), background_color=consts.COLOR_BKG_ACTIVE_INFO)
@@ -318,7 +320,7 @@ class ExamCompiler(object):
 class GUIItemTable(object):
     LANGUAGES = ("Dutch", "English")
 
-    def __init__(self, n_row, key, tooltip, max_lines = 1, font='Courier', font_size = 10,
+    def __init__(self, n_row, key, tooltip, max_lines = 1,
                  show_l2 = False, show_hash=True, short_hashes=True):
         self.max_lines = max_lines
         self.show_hash = show_hash
@@ -343,11 +345,11 @@ class GUIItemTable(object):
                               # alternating_row_color='lightyellow',
                               key=self.key_tab,
                               row_height=row_height,
-                              font='{} {}'.format(font, font_size),
                               vertical_scroll_only=False,
                               tooltip=tooltip)
-        h = floor(row_height * n_row/(1.4*font_size))
-        self.multiline = sg.Multiline(size=(80, h),  font='{} {}'.format(font, font_size),)
+
+        h = floor(row_height * n_row/(1.4*10))
+        self.multiline = sg.Multiline(size=(80, h))
 
 
     def update_headings(self):

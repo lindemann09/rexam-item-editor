@@ -38,6 +38,12 @@ def labeled_frame(elem, label="", border_width=0):
     return sg.Frame(label,[elem], border_width=border_width)
 
 
+def set_font(font, font_size):
+    if font is not None:
+        if font_size is None:
+            font_size = ""
+        sg.set_options(font='{} {}'.format(font, font_size))
+
 class GUIItem(object):
 
     def __init__(self, label, key_prefix,

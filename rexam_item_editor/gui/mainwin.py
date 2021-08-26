@@ -8,7 +8,7 @@ from ..rexam.r_render import RPY2INSTALLED
 from ..rexam.item import RExamItem, AnswerList
 from . import dialogs
 from .json_settings import JSONSettings
-from .gui_misc import GUIItem, GUIBaseDirectory
+from .gui_misc import GUIItem, GUIBaseDirectory, set_font
 from .log import log
 
 
@@ -19,7 +19,7 @@ LANG2_EVENT_PREFIX = "Lang2"
 class MainWin(object):
 
     def __init__(self, clear_settings=False, change_meta_info_button=False,
-                 monolingual=False):
+                 monolingual=False, font=None, font_size=9):
 
         """languages is none or a list of two strings indicating the
         respective languages languages"""
@@ -39,6 +39,7 @@ class MainWin(object):
             self.settings.save()
 
         # LAYOUT
+        set_font(font, font_size)
         if self.is_bilingual:
             two_languages = (consts.LANGUAGE1, consts.LANGUAGE2)
         else:
