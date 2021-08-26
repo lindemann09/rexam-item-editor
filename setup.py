@@ -15,14 +15,15 @@ package_name = "rexam_item_editor"
 application_name = "rexam-item-editor"
 
 install_requires = ["appdirs>=1.4",
-                    "pysimplegui>=4.33"]
+                    "pysimplegui>=4.33",
+                    "PyYAML>=5.4"]
 
-extras_require = {"rendering": ["rpy2>=3.4.3"]}
+extras_require = {"rendering": ["rpy2>=3.4.3", "Markdown>=3.3"]}
 
 entry_points = {'console_scripts':
                 ['{}={}.__main__:run'.format(application_name, package_name)]}
 
-package_data = {'' : ['*.png', '*.Rmd']}
+package_data = {'': ['*.png', '*.Rmd']}
 
 
 if _vi.major< 1:
