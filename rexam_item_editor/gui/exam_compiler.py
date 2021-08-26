@@ -8,14 +8,9 @@ except:
 
 from .. import __version__, APPNAME, consts
 from .json_settings import JSONSettings
-from .dialogs import top_label, ask_save
+from .dialogs import ask_save
 from ..rexam import exam
-from .gui_misc import GUIBaseDirectory
-
-sg.theme_add_new("mytheme", consts.SG_COLOR_THEME)
-sg.theme("mytheme")
-
-
+from .gui_misc import GUIBaseDirectory, labeled_frame
 
 
 class ExamCompiler(object):
@@ -57,17 +52,17 @@ class ExamCompiler(object):
 
         self.layout = [
             [self.gui_base_directory.frame,
-             top_label([self.txt_exam, self.btn_save,
-                        sg.Button("Load", size=(4, 1), key="load_exam"),
-                        sg.InputText(visible=False, enable_events=True, key='new_exam'),
-                        sg.FileSaveAs(button_text="New", file_types=(('json', '.json'),)),
-                        ],
-                        label="Exam", border_width=2),
-             top_label([self.cb_language2], label="Display", border_width=2),
-             top_label([sg.Button("Rexam code", size=(10, 1), key="btn_r_code"),
-                        sg.Button("Close", size=(10, 1), key="btn_close")], label="Window", border_width=2),
+             labeled_frame([self.txt_exam, self.btn_save,
+                            sg.Button("Load", size=(4, 1), key="load_exam"),
+                            sg.InputText(visible=False, enable_events=True, key='new_exam'),
+                            sg.FileSaveAs(button_text="New", file_types=(('json', '.json'),)),
+                            ],
+                           label="Exam", border_width=2),
+             labeled_frame([self.cb_language2], label="Display", border_width=2),
+             labeled_frame([sg.Button("Rexam code", size=(10, 1), key="btn_r_code"),
+                            sg.Button("Close", size=(10, 1), key="btn_close")], label="Window", border_width=2),
              ],
-            [top_label([self.gui_db.table, self.gui_db.multiline], label="Database",  border_width=2)],
+            [labeled_frame([self.gui_db.table, self.gui_db.multiline], label="Database", border_width=2)],
             [
              sg.Button("add", size=(30, 2),
                        button_color= consts.COLOR_GREEN_BTN,

@@ -8,12 +8,9 @@ from ..rexam.r_render import RPY2INSTALLED
 from ..rexam.item import RExamItem, AnswerList
 from . import dialogs
 from .json_settings import JSONSettings
-from .gui_item import GUIItem
-from .gui_misc import GUIBaseDirectory
+from .gui_misc import GUIItem, GUIBaseDirectory
 from .log import log
 
-sg.theme_add_new("mytheme", consts.SG_COLOR_THEME)
-sg.theme("mytheme")
 
 LANG1_EVENT_PREFIX = "Lang1"
 LANG2_EVENT_PREFIX = "Lang2"

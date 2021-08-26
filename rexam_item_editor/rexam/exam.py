@@ -87,7 +87,6 @@ class Exam(object):
     def time_stamp():
         return time.strftime("%d-%m-%Y %H:%M", time.gmtime())
 
-
     def clear(self):
         self.questions = []
         self._time_last_change = Exam.time_stamp()
@@ -112,7 +111,7 @@ class Exam(object):
         else:
             self.git_head = ""
 
-    def is_incorrect_git_head(self):
+    def is_incorrect_git_head(self): # TODO GUI needs to check this after load
         if len(self.git_head) and isinstance(self.item_db, ItemDatabase):
             return self.git_head != self.item_db.get_current_git_head_basedir()
         else:
