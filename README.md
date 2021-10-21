@@ -18,9 +18,9 @@ Feature overview
 
 *Released under the MIT License*
 
-Oliver Lindemann, Erasmus University Rotterdam, NL
+Oliver Lindemann, Erasmus University Rotterdam
 
- 
+
 ## Dependencies
 
 Python 3.7+ and the following libraries:
