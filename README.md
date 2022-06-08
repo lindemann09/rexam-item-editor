@@ -1,5 +1,10 @@
 # RExam Item Editor
 
+[![GitHub license](https://img.shields.io/github/license/lindemann09/rexam-item-editor)](https://github.com/lindemann09/rexam-item-editor/blob/master/LICENSE)
+[![Python Version](https://img.shields.io/pypi/pyversions/rexam-item-editor?style=flat)](https://www.python.org)
+[![PyPI](https://img.shields.io/pypi/v/rexam-item-editor?style=flat)](https://pypi.org/project/rexam-item-editor/)
+
+
 **Maintaining and editing databases of RExam items**
 
 Feature overview
@@ -7,7 +12,7 @@ Feature overview
 * Validations checks
     *  file and folder naming and required meta-information 
     * required subfolder structure
-    * joining bilingual items in the database (Dutch, English)
+    * joining bilingual items in the database
 * Convenience functions for item editing
     * support for generating and naming new items
     * auto-fix function for some violations of the conventions and *R*  
@@ -20,6 +25,7 @@ Feature overview
 
 Oliver Lindemann, Erasmus University Rotterdam
 
+![screenshot](https://raw.githubusercontent.com/essb-mt-section/sharestats-item-editor/main/picts/screenshot.png)
 
 ## Dependencies
 
@@ -31,6 +37,19 @@ Optional requirement:
 * rpy2 >=3.4
 * markdown >=3.0
 
+## Installation
+
+*Rexam-Item-Editor* can be installed via the Pythons package manager 
+`pip`. Open a shell and call:
+
+```
+python3 -m pip install -U rexam-item-editor
+```
+
+To run Rexam-Item-Editor called this command via your shell:
+```
+python3 -m rexam_item_editor
+```
 
 ## Rendering Rmd File (work in progress)
 
